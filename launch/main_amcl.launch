@@ -16,7 +16,7 @@
   <group ns="robot1">
   <param name="tf_prefix" value="robot1_tf" />
     <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
-      <arg name="init_pose" value="-x 2.5 -y 1.5 -z 0 -R 0 -P 0 -Y 3.14" />
+      <arg name="init_pose" value="-x 2.5 -y 1.5 -z 0" />
       <arg name="robot_name"  value="Robot1" />
     </include>
 
@@ -30,14 +30,14 @@
 
   <!-- <include file="$(find MSTC_Star_update)/launch/explore_costmap.launch" /> -->
 
-  <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 robot1_tf/map map 10" />
-  <node pkg="tf" type="static_transform_publisher" name="link2_broadcaster" args="0 0 0 0 0 0 robot1_tf/odom robot1_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 robot1_tf/map map 34" />
+  <!-- <node pkg="tf" type="static_transform_publisher" name="link2_broadcaster" args="0 0 0 0 0 0 robot1_tf/odom robot1_tf/base_footprint 34" /> -->
 
-  <!-- <include file="$(find MSTC_Star_update)/launch/amcl_robot1.launch" >
+  <include file="$(find MSTC_Star_update)/launch/amcl_robot1.launch" >
     <arg name="initial_pose_x"  value="2.5"/>
     <arg name="initial_pose_y"  value="1.5"/>
     <arg name="initial_pose_a"  value="0.0"/>
-  </include> -->
+  </include>
 
 
   <include file="$(find MSTC_Star_update)/launch/move_base_1.launch" />

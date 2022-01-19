@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   roslib
+  tf
 )
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -105,7 +106,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES MSTC_Star_update
-    CATKIN_DEPENDS roscpp rospy std_msgs
+    CATKIN_DEPENDS roscpp rospy std_msgs tf
 )
 
 ###########
@@ -133,7 +134,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(map_transformer src/MapToMatrix.cpp)
-
+add_executable(realTf_broadcaster src/PublishGroundTruth.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -146,6 +147,10 @@ add_executable(map_transformer src/MapToMatrix.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(map_transformer
+    ${catkin_LIBRARIES}
+)
+
+target_link_libraries(realTf_broadcaster
     ${catkin_LIBRARIES}
 )
 
