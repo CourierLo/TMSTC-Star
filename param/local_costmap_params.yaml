@@ -1,5 +1,5 @@
 local_costmap:
-  global_frame: odom
+  global_frame: odom  # odom
   robot_base_frame: base_footprint
 
   update_frequency: 10.0

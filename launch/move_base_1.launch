@@ -16,7 +16,7 @@
   <arg name="move_forward_only" default="false"/>
   <!--<arg name="custom_param_file" default="$(find turtlebot_navigation)/param/dummy.yaml"/>-->
 
-  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base1" output="screen">
     <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
     <rosparam file="$(find MSTC_Star_update)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
     <rosparam file="$(find MSTC_Star_update)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />

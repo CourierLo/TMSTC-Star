@@ -3,7 +3,7 @@
 
   <!-- start world -->
   <node name="gazebo" pkg="gazebo_ros" type="gazebo"
-   args="$(find MSTC_Star_update)/world/Indoor_10m_1.world" respawn="false" output="screen" />
+   args="$(find MSTC_Star_update)/world/empty.world" respawn="false" output="screen" />
 
   <node name="map_server" pkg="map_server" type="map_server" args="$(find MSTC_Star_update)/map/map.yaml" >
     <param name="frame_id" value="map" />
@@ -16,7 +16,7 @@
   <group ns="robot1">
   <param name="tf_prefix" value="robot1_tf" />
     <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
-      <arg name="init_pose" value="-x 2.5 -y 1.5 -z 0 -R 0 -P 0 -Y 3.14" />
+      <arg name="init_pose" value="-x 0.25 -y 0.25 -z 0 -R 0 -P 0 -Y 1.57" />
       <arg name="robot_name"  value="Robot1" />
     </include>
 

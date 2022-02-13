@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(MSTC_Star_update)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11 -w -O2)
+add_compile_options(-std=c++17 -w -O2)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -104,7 +104,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+   INCLUDE_DIRS include
 #  LIBRARIES MSTC_Star_update
     CATKIN_DEPENDS roscpp rospy std_msgs tf
 )
@@ -116,14 +116,16 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
+  ${MSTC_Star_update}/include
   ${catkin_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/MSTC_Star_update.cpp
-# )
+add_library(Division
+  src/Division/PathCut.cpp 
+  src/Division/MaximumSubRectDivision.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -135,6 +137,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(map_transformer src/MapToMatrix.cpp)
 add_executable(realTf_broadcaster src/PublishGroundTruth.cpp)
+add_executable(algo_test src/main.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -148,10 +151,16 @@ add_executable(realTf_broadcaster src/PublishGroundTruth.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(map_transformer
     ${catkin_LIBRARIES}
+    Division
 )
 
 target_link_libraries(realTf_broadcaster
     ${catkin_LIBRARIES}
+)
+
+target_link_libraries(algo_test
+    ${catkin_LIBRARIES}
+    Division
 )
 
 #############
