@@ -15,6 +15,8 @@ using std::cout;
 using std::endl;
 
 #define PI 3.141592654
+#define HORIZONTAL 0
+#define VERTICAL   1
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 // need to publish coverage map and robots' initial position
 // remember to divide the map by 2, corresponing to MST algorithm
@@ -28,28 +30,36 @@ private:
     int cmw, cmh;  // coverage map width, height and 
     double cmres;  // coverage map resolution
     int robot_num;
+    double tolerance_distance;
 
+    // path plan
     vector<int> robot_init_pos;
     Mat Map, Region, MST, paths_idx;
     vector<nav_msgs::Path> paths;
+
+    // goal control
     vector<pair<double, double> > robot_pos;
-    
-    //test
+    Mat paths_cpt_idx;
+    vector<int> goal_ptr;
+    vector<int> cpt_ptr;
+
+    // test
     std::vector<ros::Publisher> path_publishers;
     std::vector<ros::Subscriber> odom_subscribers;
+
+    double tic, toc;  // timer
 
 public:
     // firstly get robot's origin position and trans to index
     // secondly create MST according to the map
     // thirdly create path for every robot by coverage map's indexes
     MapTransformer(int argc, char**argv){
-        if(argc <= 1){
-            cout << "need to enter the number of robots!\n";
-            return;
-        }
-        robot_num = argv[1][0] - '0';
-        cout << "robot_num: " << robot_num << endl;
-
+        // if(argc <= 1){
+        //     cout << "need to enter the number of robots!\n";
+        //     return;
+        // }
+        // robot_num = argv[1][0] - '0';
+        // cout << "robot_num: " << robot_num << endl;
         ros::init(argc, argv,"MultiRobotSim");
         ros::NodeHandle n;
         ros::Subscriber map_sub = n.subscribe("map", 10, &MapTransformer::map_callback, this);
@@ -59,6 +69,16 @@ public:
 
         while(received_map == false)    ros::spinOnce();
         cmw = coverage_map.info.width;  cmh = coverage_map.info.height;  cmres = coverage_map.info.resolution;
+
+        if(!n.getParam("/next_goal/tolerance_distance", tolerance_distance)){
+            ROS_ERROR("Please set your tolerance distance.");
+            return;
+        }
+
+        if(!n.getParam("/robot_number", robot_num)){
+            ROS_ERROR("Please set your robot number.");
+            return;
+        }
 
         // construct robot init pos index vector
         for(int i = 0; i < robot_num; ++i){
@@ -100,12 +120,15 @@ public:
 
         // construct MST and gain index path
         Division div(Map);
-        MST = div.rectDivisionSolver();
+        // MST = div.rectDivisionSolver();
+        MST = div.dfsWithStackSolver(HORIZONTAL);
         PathCut cut(Map, Region, MST, robot_init_pos);
         paths_idx = cut.cutSolver();
 
         // TEST: try to reduce extra points in path, 2 points represents 1 line
-        //paths_idx = reducePathPoints();
+        // paths_idx = getCheckpoints();
+        paths_cpt_idx.resize(robot_num);
+        paths_cpt_idx = getCheckpoints();
 
         cout << "get every path pose stamps...\n";
         // 将index paths转化为一个个位姿
@@ -163,6 +186,8 @@ public:
         //     ros::Duration(1).sleep();
         // }
         ROS_INFO("Begin full coverage...");
+
+        tic = ros::Time::now().toSec();
         sendGoals();
     }
 
@@ -184,18 +209,22 @@ public:
 	    return a + c == 2 * b;
     }
 
-    Mat reducePathPoints(){
-        Mat paths_tmp(robot_num, vector<int>{});
+    Mat getCheckpoints(){
+        Mat paths_cpt_idx(robot_num, vector<int>{});
         for(int i = 0; i < robot_num; ++i){
-            paths_tmp[i].push_back(paths_idx[i][0]);
+            //paths_cpt_idx[i].push_back(paths_idx[i][0]);
+            paths_cpt_idx[i].push_back(0);
             for(int step = 1; step < paths_idx[i].size() - 1; ++step){
-                if(!isSameLine(paths_idx[i][step - 1], paths_idx[i][step], paths_idx[i][step + 1]))
-                    paths_tmp[i].push_back(paths_idx[i][step]);
+                if(!isSameLine(paths_idx[i][step - 1], paths_idx[i][step], paths_idx[i][step + 1])){
+                    // paths_cpt_idx[i].push_back(paths_idx[i][step]);
+                    paths_cpt_idx[i].push_back(step);
+                }
             }
-            paths_tmp[i].push_back(paths_idx[i][paths_idx[i].size() - 1]);
+            //paths_cpt_idx[i].push_back(paths_idx[i][paths_idx[i].size() - 1]);
+            paths_cpt_idx[i].push_back(paths_idx[i].size() - 1);
         }
 
-        return paths_tmp;
+        return paths_cpt_idx;
     }
 
     void checkActionState(MoveBaseClient &ac){
@@ -212,7 +241,8 @@ public:
 
     // send each robots' goal to move_base(using action model)
     void sendGoals(){
-        vector<int> goal_ptr(robot_num, 0);
+        goal_ptr.resize(robot_num, 0);
+        cpt_ptr.resize(robot_num, 0);
         vector<MoveBaseClient*> ac_ptr(robot_num); //得用指针因为client不可复制
 
         // 注意第一个参数的名称，是****/goal的前缀而不是move_base节点的名字！！！
@@ -228,17 +258,31 @@ public:
         // TODO:计时功能，还有判断所有机器人到达终点的判断
         // 这里得用ros::ok infinite loop触发callback
         int counter = 0;
+        vector<bool> finish_cover(robot_num, false);
         while(ros::ok()){
             ros::spinOnce();   // 得先收到机器人初始点位置才行
 
             for(int i = 0; i < robot_num; ++i){
                 checkActionState(*ac_ptr[i]);
 
-                // if one robot is near enough, then goes for next goal
+                if(!finish_cover[i] && goal_ptr[i] == paths[i].poses.size() && reachGoal(i, goal_ptr[i] - 1)){
+                    finish_cover[i] = true;
+                    counter++;
+                }
+
+                // if one robot is near enough(distance less than tolerance), then goes for next goal(reachGoal's work)
                 if(!goal_ptr[i] || reachGoal(i, goal_ptr[i] - 1) || (goal_ptr[i] < paths[i].poses.size() && (*ac_ptr[i]).getState() == actionlib::SimpleClientGoalState::SUCCEEDED)){
+                    if(goal_ptr[i] - 1 == paths_cpt_idx[i][cpt_ptr[i]])
+                        cpt_ptr[i]++;
+
                     sendOneGoal(i, goal_ptr[i]++, *ac_ptr[i]);
                     //sendOneGoal(i, goal_ptr[i]++, ac1);
                 }
+            }
+            
+            if(counter == robot_num){
+                toc = ros::Time::now().toSec();
+                ROS_INFO("Total time: %lf\n", toc - tic);
             }
 
             // show plan path
@@ -254,8 +298,11 @@ public:
     bool reachGoal(int id, int step){
         double dis = sqrt(pow(paths[id].poses[step].pose.position.x - robot_pos[id].first, 2) + pow(paths[id].poses[step].pose.position.y - robot_pos[id].second, 2));
         ROS_INFO("\033[35mRobot %d's distance from nearest checkpoint(%d): %lf", id, step, dis);
-        if(dis <= 0.35){
-            ROS_INFO("\033[35mHave arrived checkpoint.");
+        // if(paths_cpt_idx[id][cpt_ptr[id]] == step && dis >= 0.06){
+        //     return false;
+        // }
+        if(paths_cpt_idx[id][cpt_ptr[id]] != step && dis <= tolerance_distance){
+            ROS_INFO("\033[35mNext normal point is near enough.");
             return true;
         }
         return false;

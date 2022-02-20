@@ -14,7 +14,7 @@
     command="$(find xacro)/xacro --inorder $(find MSTC_Star_update)/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro" />
 
   <group ns="robot1">
-  <param name="tf_prefix" value="robot1_tf" />
+    <param name="tf_prefix" value="robot1_tf" />
     <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
       <arg name="init_pose" value="-x 0.25 -y 0.25 -z 0 -R 0 -P 0 -Y 1.57" />
       <arg name="robot_name"  value="Robot1" />
@@ -44,6 +44,8 @@
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find MSTC_Star_update)/rviz/navigate.rviz" />
 
+  <param name = "/robot_number" value = "1" />
+  <param name = "/next_goal/tolerance_distance" value = "0.25" />
   <!-- <include file="$(find MSTC_Star_update)/launch/explore_costmap.launch" /> -->
 
 </launch>
