@@ -9,9 +9,9 @@
     <param name="frame_id" value="map" />
   </node>
 
-  <!-- include our robots -->
+  <!-- include our robots $(find MSTC_Star_update)/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro -->
   <param name="robot_description"
-    command="$(find xacro)/xacro --inorder $(find MSTC_Star_update)/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro" />
+    command="$(find xacro)/xacro --inorder $(find MSTC_Star_update)/kobuki_description/urdf/kobuki.urdf.xacro" />
 
   <group ns="robot1">
     <param name="tf_prefix" value="robot1_tf" />
@@ -45,7 +45,7 @@
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find MSTC_Star_update)/rviz/navigate.rviz" />
 
   <param name = "/robot_number" value = "1" />
-  <param name = "/next_goal/tolerance_distance" value = "0.25" />
+  <param name = "/next_goal/tolerance_distance" value = "0.35" />
   <!-- <include file="$(find MSTC_Star_update)/launch/explore_costmap.launch" /> -->
 
 </launch>

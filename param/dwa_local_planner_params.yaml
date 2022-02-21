@@ -1,47 +1,104 @@
+# DWAPlannerROS:
+
+# # Robot Configuration Parameters
+#   max_vel_x: 0.22   # 0.22 adn -0.22
+#   min_vel_x: -0.22
+
+#   max_vel_y: 0.0
+#   min_vel_y: 0.0
+
+# # The velocity when robot is moving in a straight line
+#   max_vel_trans:  0.2  # 0.22 and 0.11
+#   min_vel_trans:  0.11
+
+#   max_vel_theta: 2.75
+#   min_vel_theta: 1.37
+
+#   acc_lim_x: 2.5
+#   acc_lim_y: 0.0
+#   acc_lim_theta: 3.2 
+
+# # Goal Tolerance Parametes
+#   xy_goal_tolerance: 0.05
+#   yaw_goal_tolerance: 0.05
+#   latch_xy_goal_tolerance: false
+
+# # Forward Simulation Parameters
+#   sim_time: 2.0
+#   vx_samples: 30
+#   vy_samples: 0
+#   vth_samples: 40
+#   controller_frequency: 15.0
+
+# # Trajectory Scoring Parameters
+#   path_distance_bias: 32.0
+#   goal_distance_bias: 20.0
+#   occdist_scale: 0.02
+#   forward_point_distance: 0.325
+#   stop_time_buffer: 0.2
+#   scaling_speed: 0.25
+#   max_scaling_factor: 0.2
+
+# # Oscillation Prevention Parameters
+#   oscillation_reset_dist: 0.05
+
+# # Debugging
+#   publish_traj_pc : true
+#   publish_cost_grid_pc: true
+##-------------------------------------------------------------------------------------------------
 DWAPlannerROS:
 
-# Robot Configuration Parameters
-  max_vel_x: 0.22   # 0.22 adn -0.22
-  min_vel_x: -0.22
+# Robot Configuration Parameters - Kobuki
+  max_vel_x: 0.5  # 0.55
+  min_vel_x: 0.0 
 
-  max_vel_y: 0.0
-  min_vel_y: 0.0
+  max_vel_y: 0.0  # diff drive robot
+  min_vel_y: 0.0  # diff drive robot
 
-# The velocity when robot is moving in a straight line
-  max_vel_trans:  0.2  # 0.22 and 0.11
-  min_vel_trans:  0.11
+  max_trans_vel: 0.5 # choose slightly less than the base's capability
+  min_trans_vel: 0.1  # this is the min trans velocity when there is negligible rotational velocity
+  trans_stopped_vel: 0.1
 
-  max_vel_theta: 2.75
-  min_vel_theta: 1.37
+  # Warning!
+  #   do not set min_trans_vel to 0.0 otherwise dwa will always think translational velocities
+  #   are non-negligible and small in place rotational velocities will be created.
 
-  acc_lim_x: 2.5
-  acc_lim_y: 0.0
-  acc_lim_theta: 3.2 
+  max_rot_vel: 0.4  # choose slightly less than the base's capability
+  min_rot_vel: 0.4  # this is the min angular velocity when there is negligible translational velocity
+  rot_stopped_vel: 0.4
+  
+  acc_lim_x: 1.0 # maximum is theoretically 2.0, but we 
+  acc_lim_theta: 2.0
+  acc_lim_y: 0.0      # diff drive robot
 
-# Goal Tolerance Parametes
-  xy_goal_tolerance: 0.05
-  yaw_goal_tolerance: 0.05
-  latch_xy_goal_tolerance: false
+# Goal Tolerance Parameters
+  yaw_goal_tolerance: 0.05  # 0.05
+  xy_goal_tolerance: 0.10  # 0.10
+  # latch_xy_goal_tolerance: false
 
 # Forward Simulation Parameters
-  sim_time: 2.0
-  vx_samples: 30
-  vy_samples: 0
-  vth_samples: 40
-  controller_frequency: 15.0
+  sim_time: 1.0       # 1.7
+  vx_samples: 6       # 3
+  vy_samples: 1       # diff drive robot, there is only one sample
+  vtheta_samples: 20  # 20
 
 # Trajectory Scoring Parameters
-  path_distance_bias: 32.0
-  goal_distance_bias: 20.0
-  occdist_scale: 0.02
-  forward_point_distance: 0.325
-  stop_time_buffer: 0.2
-  scaling_speed: 0.25
-  max_scaling_factor: 0.2
+  path_distance_bias: 94.0      # 32.0   - weighting for how much it should stick to the global path plan
+  goal_distance_bias: 24.0      # 24.0   - wighting for how much it should attempt to reach its goal
+  occdist_scale: 0.3            # 0.01   - weighting for how much the controller should avoid obstacles
+  forward_point_distance: 0.325 # 0.325  - how far along to place an additional scoring point
+  stop_time_buffer: 0.2         # 0.2    - amount of time a robot must stop in before colliding for a valid traj.
+  scaling_speed: 0.25           # 0.25   - absolute velocity at which to start scaling the robot's footprint
+  max_scaling_factor: 0.2       # 0.2    - how much to scale the robot's footprint when at speed.
 
 # Oscillation Prevention Parameters
-  oscillation_reset_dist: 0.05
+  oscillation_reset_dist: 0.05  # 0.05   - how far to travel before resetting oscillation flags
 
 # Debugging
   publish_traj_pc : true
   publish_cost_grid_pc: true
+# global_frame_id: odom
+
+
+# Differential-drive robot configuration - necessary?
+#  holonomic_robot: false
