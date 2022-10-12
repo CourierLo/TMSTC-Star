@@ -1,3 +1,6 @@
+#ifndef _MAXIMUM_SUB_RECT_DIVISION_H
+#define _MAXIMUM_SUB_RECT_DIVISION_H
+
 #include <vector>
 #include <stack>
 #include <algorithm>
@@ -9,7 +12,15 @@
 #include <time.h>
 #include <unordered_set>
 
-using namespace std;
+using std::vector;
+using std::stack;
+using std::cout;
+using std::endl;
+using std::pair;
+using std::queue;
+using std::set;
+using std::priority_queue;
+using std::string;
 
 typedef vector<vector<int>> Mat;
 typedef pair<int, int> P;
@@ -135,3 +146,5 @@ public:
 		else  return 4;
 	}
 };
+
+#endif

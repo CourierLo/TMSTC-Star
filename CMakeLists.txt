@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.0.2)
 project(MSTC_Star_update)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++17 -w -O2)
+SET(CMAKE_BUILD_TYPE "Release")
+add_compile_options(-std=c++17 -w -O3)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -13,7 +14,10 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   roslib
   tf
+  cmake_modules
 )
+
+find_package(Boost REQUIRED COMPONENTS system)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -106,7 +110,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
    INCLUDE_DIRS include
 #  LIBRARIES MSTC_Star_update
-    CATKIN_DEPENDS roscpp rospy std_msgs tf
+   CATKIN_DEPENDS roscpp rospy std_msgs tf
 )
 
 ###########
@@ -119,13 +123,27 @@ include_directories(
   include
   ${MSTC_Star_update}/include
   ${catkin_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
 )
+
+link_libraries(${catkin_LIBRARIES})
 
 ## Declare a C++ library
 add_library(Division
   src/Division/PathCut.cpp 
   src/Division/MaximumSubRectDivision.cpp
 )
+
+add_library(ACO
+  src/ACO/ACO_STC.cpp
+)
+
+add_library(Dinic
+  src/Dinic/Dinic.cpp
+)
+# add_library(DARPO
+#   src/DARP/DARPPlanner.cpp
+# )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -152,6 +170,8 @@ add_executable(algo_test src/main.cpp)
 target_link_libraries(map_transformer
     ${catkin_LIBRARIES}
     Division
+    ACO
+    Dinic
 )
 
 target_link_libraries(realTf_broadcaster
@@ -161,6 +181,8 @@ target_link_libraries(realTf_broadcaster
 target_link_libraries(algo_test
     ${catkin_LIBRARIES}
     Division
+    ACO
+    Dinic
 )
 
 #############

@@ -2,6 +2,7 @@
   <param name="/use_sim_time" value="true" />
 
   <!-- start world -->
+  <!-- Indoor_10m_1.world -->
   <node name="gazebo" pkg="gazebo_ros" type="gazebo"
    args="$(find MSTC_Star_update)/world/empty.world" respawn="false" output="screen" />
 
@@ -9,18 +10,186 @@
     <param name="frame_id" value="map" />
   </node>
 
-  <!-- include our robots $(find MSTC_Star_update)/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro -->
+  <!-- include our robots -->
+  <!-- turtlebot3 model dir : $(find MSTC_Star_update)/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro -->
+  <!-- kobuki model dir : $(find MSTC_Star_update)/kobuki_description/urdf/kobuki.urdf.xacro -->
   <param name="robot_description"
     command="$(find xacro)/xacro --inorder $(find MSTC_Star_update)/kobuki_description/urdf/kobuki.urdf.xacro" />
 
   <group ns="robot1">
     <param name="tf_prefix" value="robot1_tf" />
     <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
-      <arg name="init_pose" value="-x 0.25 -y 0.25 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="init_pose" value="-x 1.25 -y 6.25 -z 0 -R 0 -P 0 -Y 1.57" />     
       <arg name="robot_name"  value="Robot1" />
     </include>
-
   </group>
+
+  <!-- <group ns="robot2">
+    <param name="tf_prefix" value="robot2_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 22.5 -y 50.36 -z 0 -R 0 -P 0 -Y 1.57" />   
+      <arg name="robot_name"  value="Robot2" />
+    </include>
+  </group>
+
+  <group ns="robot3">
+    <param name="tf_prefix" value="robot3_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 43.8 -y 46.5 -z 0 -R 0 -P 0 -Y 1.57" />  
+      <arg name="robot_name"  value="Robot3" />
+    </include>
+  </group>
+
+  <group ns="robot4">
+    <param name="tf_prefix" value="robot4_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 19.1 -y 40.1 -z 0 -R 0 -P 0 -Y 1.57" />    
+      <arg name="robot_name"  value="Robot4" />
+    </include>
+  </group> -->
+
+  <!-- <group ns="robot5">
+    <param name="tf_prefix" value="robot5_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 9 -y 27.3 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot5" />
+    </include>
+  </group>
+
+  <group ns="robot6">
+    <param name="tf_prefix" value="robot6_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 22.1 -y 25.5 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot6" />
+    </include>
+  </group>
+
+  <group ns="robot7">
+    <param name="tf_prefix" value="robot7_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 12.9 -y 9.5 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot7" />
+    </include>
+  </group> -->
+
+  <!-- <group ns="robot8">
+    <param name="tf_prefix" value="robot8_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 23.4 -y 3.5 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot8" />
+    </include>
+  </group>
+
+  <group ns="robot9">
+    <param name="tf_prefix" value="robot9_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 32.6 -y 5.5 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot9" />
+    </include>
+  </group>
+
+  <group ns="robot10">
+    <param name="tf_prefix" value="robot10_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 44.5 -y 5 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot10" />
+    </include>
+  </group>
+
+  <group ns="robot11">
+    <param name="tf_prefix" value="robot11_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 45.8 -y 22.7 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot11" />
+    </include>
+  </group>
+
+  <group ns="robot12">
+    <param name="tf_prefix" value="robot12_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 41 -y 31.3 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot12" />
+    </include>
+  </group> -->
+
+  <!-- <group ns="robot13">
+    <param name="tf_prefix" value="robot13_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 40.5 -y 28 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot13" />
+    </include>
+  </group>
+
+  <group ns="robot14">
+    <param name="tf_prefix" value="robot14_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 45.52 -y 19.5 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot14" />
+    </include>
+  </group>
+
+  <group ns="robot15">
+    <param name="tf_prefix" value="robot15_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 46.5 -y 11.5 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot15" />
+    </include>
+  </group>
+
+  <group ns="robot16">
+    <param name="tf_prefix" value="robot16_tf" />
+    <include file="$(find MSTC_Star_update)/launch/one_robot.launch">
+      <arg name="init_pose" value="-x 50 -y 3 -z 0 -R 0 -P 0 -Y 1.57" />
+      <arg name="robot_name"  value="Robot16" />
+    </include>
+  </group> -->
+
+  <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 robot1_tf/map map 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot1_odom_footprint" args="0 0 0 0 0 0 robot1_tf/odom robot1_tf/base_footprint 10" />
+  <!-- <node pkg="tf" type="static_transform_publisher" name="robot2_odom_footprint" args="0 0 0 0 0 0 robot2_tf/odom robot2_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot3_odom_footprint" args="0 0 0 0 0 0 robot3_tf/odom robot3_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot4_odom_footprint" args="0 0 0 0 0 0 robot4_tf/odom robot4_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot5_odom_footprint" args="0 0 0 0 0 0 robot5_tf/odom robot5_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot6_odom_footprint" args="0 0 0 0 0 0 robot6_tf/odom robot6_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot7_odom_footprint" args="0 0 0 0 0 0 robot7_tf/odom robot7_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot8_odom_footprint" args="0 0 0 0 0 0 robot8_tf/odom robot8_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot9_odom_footprint" args="0 0 0 0 0 0 robot9_tf/odom robot9_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot10_odom_footprint" args="0 0 0 0 0 0 robot10_tf/odom robot10_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot11_odom_footprint" args="0 0 0 0 0 0 robot11_tf/odom robot11_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot12_odom_footprint" args="0 0 0 0 0 0 robot12_tf/odom robot12_tf/base_footprint 10" /> -->
+  <!-- <node pkg="tf" type="static_transform_publisher" name="robot13_odom_footprint" args="0 0 0 0 0 0 robot13_tf/odom robot13_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot14_odom_footprint" args="0 0 0 0 0 0 robot14_tf/odom robot14_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot15_odom_footprint" args="0 0 0 0 0 0 robot15_tf/odom robot15_tf/base_footprint 10" />
+  <node pkg="tf" type="static_transform_publisher" name="robot16_odom_footprint" args="0 0 0 0 0 0 robot16_tf/odom robot16_tf/base_footprint 10" /> -->
+
+  <!-- move_base launch -->
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_1.launch" />
+  <!-- <include file="$(find MSTC_Star_update)/launch/move_base/move_base_2.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_3.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_4.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_5.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_6.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_7.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_8.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_9.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_10.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_11.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_12.launch" /> -->
+  <!-- <include file="$(find MSTC_Star_update)/launch/move_base/move_base_13.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_14.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_15.launch" />
+  <include file="$(find MSTC_Star_update)/launch/move_base/move_base_16.launch" /> -->
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find MSTC_Star_update)/rviz/navigate.rviz" />
+
+  <param name = "/robot_number" value = "1" />
+  <param name = "/next_goal/tolerance_distance" value = "0.40" />
+  <param name = "/allocate_method" value = "MSTC" />
+  <param name = "/MST_shape" value = "DINIC" />
+  <param name = "/data_file_path" value = "/home/courierlo/test_data/tmp.txt" />
+  <param name = "/useROSPlanner" value = "true" />
+  <param name = "/coverAndReturn" value = "true" />
+  <param name = "/map_scale" value = "10" />
 
   <!-- <include file="$(find MSTC_Star_update)/launch/gmapping.launch">
       <arg name="scan_topic"  value="robot1/scan" /> 
@@ -28,24 +197,5 @@
       <arg name="odom_frame"  value="robot1_tf/odom"/>
   </include> -->
 
-  <!-- <include file="$(find MSTC_Star_update)/launch/explore_costmap.launch" /> -->
-
-  <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 robot1_tf/map map 10" />
-  <node pkg="tf" type="static_transform_publisher" name="link2_broadcaster" args="0 0 0 0 0 0 robot1_tf/odom robot1_tf/base_footprint 10" />
-
-  <!-- <include file="$(find MSTC_Star_update)/launch/amcl_robot1.launch" >
-    <arg name="initial_pose_x"  value="2.5"/>
-    <arg name="initial_pose_y"  value="1.5"/>
-    <arg name="initial_pose_a"  value="0.0"/>
-  </include> -->
-
-
-  <include file="$(find MSTC_Star_update)/launch/move_base_1.launch" />
-
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find MSTC_Star_update)/rviz/navigate.rviz" />
-
-  <param name = "/robot_number" value = "1" />
-  <param name = "/next_goal/tolerance_distance" value = "0.35" />
-  <!-- <include file="$(find MSTC_Star_update)/launch/explore_costmap.launch" /> -->
 
 </launch>

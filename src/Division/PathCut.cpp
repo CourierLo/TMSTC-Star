@@ -66,6 +66,8 @@ void PathCut::MST2Path() {
 		}
 	}
 
+	cout << "Generating: Get path edges\n";
+
 	// 得到pathEdge后，进一步得到路径序列pathSequence（及其反序列）
 	// pathSequnce从第一个机器人的位置开始
 	// pathSequence的长度就是圆的长度，invSequence不是
@@ -75,11 +77,15 @@ void PathCut::MST2Path() {
 		inPath[cur] = true;
 		pathSequence.push_back(cur);
 
+		//cout << cur << " ";
+		if(pathEdge[cur].size() == 0)	cout << "Generating: Edge set crash\n";
+
 		cur = inPath[pathEdge[cur][0]] ? pathEdge[cur][1] : pathEdge[cur][0];
 		if(inPath[cur])	break;
 	}
 	circleLen = pathSequence.size();
 
+	cout << "Generating: Trim labels\n";
 	// 坐标label->顺序label  
 	invSequence.resize(Region.size() * Region[0].size(), -1);
 	for (int i = 0; i < pathSequence.size(); ++i) {
@@ -237,13 +243,89 @@ double PathCut::getTurnAndLength(int i) {
 		return pathValue[circleLen - 1] - pathValue[start] + pathValue[ending] + endingTurn;
 }
 
+double PathCut::estimatePathCost(nav_msgs::Path& path){
+	double res = 0;
+	double x1, x2, x3, y1, y2, y3;
+	for(int i = 1; i < path.poses.size(); ++i){
+		x1 = path.poses[i].pose.position.x, x2 = path.poses[i - 1].pose.position.x;
+		y1 = path.poses[i].pose.position.y, y2 = path.poses[i - 1].pose.position.y;
+		res += sqrt(pow(x1 - x2, 2) + pow(y1 - y2, 2));
+		
+		// if(i > 1){
+		// 	x3 = path.poses[i - 2].pose.position.x, y3 = path.poses[i - 2].pose.position.y;
+		// 	pair<double, double> vec1 = { x2 - x1, y2 - y1 };
+		// 	pair<double, double> vec2 = { x3 - x1, y3 - y1 };
+		// 	double angle = atan2(vec2.second, vec2.first) - atan2(vec1.second, vec1.first);
+		// 	res += fabs(4.0 * angle) / PI * ONE_TURN_VAL / 3;
+		// }
+	}
+	//res += ONE_TURN_VAL;
+
+	return res;
+}
+
+double PathCut::ROSGlobalPlannerCost(int start_id, int goal_id){
+	static int seqno;
+	double res = globalCostmap->info.resolution * 10.0;
+	double start_x = (start_id % bigcols) * res + res / 2 + globalCostmap->info.origin.position.x;
+	double start_y = (start_id / bigcols) * res + res / 2 + globalCostmap->info.origin.position.y;
+	double goal_x = (goal_id % bigcols) * res + res / 2 + globalCostmap->info.origin.position.x;
+	double goal_y = (goal_id / bigcols) * res + res / 2 + globalCostmap->info.origin.position.y;
+
+	//geometry_msgs::Quaternion q();
+	float tolerance = 0.0;
+
+	geometry_msgs::PoseStamped start_pose;
+	start_pose.header.frame_id = "map";
+	start_pose.header.stamp = ros::Time::now();
+	start_pose.header.seq = seqno;
+	start_pose.pose.position.x = start_x;
+	start_pose.pose.position.y = start_y;
+	start_pose.pose.orientation.w = 1;
+	
+	geometry_msgs::PoseStamped goal_pose;
+	goal_pose.header.frame_id = "map";
+	goal_pose.header.stamp = ros::Time::now();
+	goal_pose.header.seq = seqno++;
+	goal_pose.pose.position.x = goal_x;
+	goal_pose.pose.position.y = goal_y;
+	goal_pose.pose.orientation.w = 1;
+
+	ros::ServiceClient client = nh->serviceClient<nav_msgs::GetPlan>("/move_base1/make_plan", true);
+	nav_msgs::GetPlan getPlanSrv;
+	getPlanSrv.request.start = start_pose;
+	getPlanSrv.request.goal = goal_pose;
+	getPlanSrv.request.tolerance = tolerance;
+
+	if(client.call(getPlanSrv)){
+		return estimatePathCost(getPlanSrv.response.plan);
+	} else {
+		ROS_ERROR("Failed to get ROS planning path. Can't generate path cost!");
+		return 0;
+	}
+}
+
 double PathCut::updateCutVal(int i) {
 	// 计算depot出发，到cut起点 + cut + cut终点到depot的权重
 	int cut_start_region_label = pathSequence[cuts[i].start];
 	int cut_end_region_label = pathSequence[(cuts[i].start + cuts[i].len - 1 + circleLen) % circleLen];
 
-	// return A_star(depot[i], cut_start_region_label) + 1.0 * cuts[i].len + A_star(cut_end_region_label, depot[i]);
-	return A_star(depot[cut_depot[i]], cut_start_region_label) + getTurnAndLength(i) + A_star(cut_end_region_label, depot[cut_depot[i]]);
+	// cover without back to starting point
+	if(!coverAndReturn){
+		if(!useROSPlanner)
+			return 0.5 * A_star(depot[cut_depot[i]], cut_start_region_label) + getTurnAndLength(i);   //rough A*
+		else{
+			// precise Navfn planning path value. Use navfn/MakeNavPlan Service
+			return ROSGlobalPlannerCost(depot[cut_depot[i]], cut_start_region_label) + getTurnAndLength(i);
+		}
+	} else {
+		if(!useROSPlanner)
+			return 0.5 * A_star(depot[cut_depot[i]], cut_start_region_label) + getTurnAndLength(i) + 0.5 * A_star(cut_end_region_label, depot[cut_depot[i]]); //rough A*
+		else{
+			// precise Navfn planning path value. Use navfn/MakeNavPlan Service
+			return 1.1 * ROSGlobalPlannerCost(depot[cut_depot[i]], cut_start_region_label) + getTurnAndLength(i) + 1.1 * ROSGlobalPlannerCost(cut_end_region_label, depot[cut_depot[i]]);
+		}
+	}
 }
 
 // depot是机器人在region下的一维label
@@ -256,6 +338,13 @@ void PathCut::MSTC_Star() {
 	for (auto x : depot) tmp.push_back(invSequence[x]);
 	sort(tmp.begin(), tmp.end());
 	
+	// printf
+	// cout << "Cut prework, show depot and cut: \n";
+	// for(int i = 0; i < depot.size(); ++i){
+	// 	cout << i << " depot and inv: " << depot[i] << " " << invSequence[depot[i]] << " cut: " << tmp[i] << "\n";
+	// }
+	// cout << "\n\n";
+
 	for (int i = 0; i < depot.size(); ++i) {
 		for (int j = 0; j < depot.size(); ++j) {
 			if (invSequence[depot[i]] == tmp[j]) {
@@ -264,6 +353,13 @@ void PathCut::MSTC_Star() {
 			}
 		}
 	}
+
+	// printf
+	// cout << "Cut prework, transform cut depot label\n";
+	// for(int i = 0; i < depot.size(); ++i){
+	// 	cout << i << " depot_cut " << depot_cut[i] << " cut_depot: " << cut_depot[i] << " depot " << depot[cut_depot[i]] << "\n";
+	// }
+	// cout << "\n";
 
 	// TODO i改掉
 	double opt = 0, wst = 2e9;
@@ -281,8 +377,8 @@ void PathCut::MSTC_Star() {
 	int cur_iter = 0, max_iter = 10;
 	//while (cur_iter < max_iter) 
 	// infinite loop
-	while (opt - wst > 100.0) {
-		//cout << "cutting for balancing...\n";     // just a sign
+	while (opt - wst > 10.0) {
+		cout << "cutting for balancing...\n";     // just a sign
 		double minn = 2e9, maxx = -1;
 		int min_cut = -1, max_cut = -1;
 		for (int i = 0; i < cuts.size(); ++i) {
@@ -296,6 +392,7 @@ void PathCut::MSTC_Star() {
 			}
 		}
 
+		cout << "before adjustment opt and wst: " << maxx << "  " << minn << "\n";
 		/*cout << "min cut and max cut's id: " << min_cut << " " << max_cut << endl;
 		cout << "min cut and max cut's length: " << cuts[min_cut].len << " " << cuts[max_cut].len << endl;
 		cout << "min cut and max cut's val: " << cuts[min_cut].val << " " << cuts[max_cut].val << endl;*/
@@ -315,8 +412,15 @@ void PathCut::MSTC_Star() {
 			opt = cur_opt;
 			cur_iter++;
 		}*/
-		opt = std::max_element(cuts.begin(), cuts.end(), [](cut& a, cut& b) { return a.val < b.val; })->val;
-		wst = std::min_element(cuts.begin(), cuts.end(), [](cut& a, cut& b) { return a.val < b.val; })->val;
+		//opt = std::max_element(cuts.begin(), cuts.end(), [](cut& a, cut& b) { return a.val < b.val; })->val;
+		//wst = std::min_element(cuts.begin(), cuts.end(), [](cut& a, cut& b) { return a.val < b.val; })->val;
+		opt = 0, wst = 2e9;
+		for(int i = 0; i < cuts.size(); ++i){
+			opt = std::max(opt, cuts[i].val);
+			wst = std::min(wst, cuts[i].val);
+		}
+
+		cout << "after adjustment opt and wst: " << opt << "  " << wst << "\n";
 	}
 
 
@@ -435,22 +539,29 @@ void PathCut::get2DCoordinate(int index, int& x, int& y) {
 Mat PathCut::generatePath() {
 	Mat path_for_each_robot(depot.size(), vector<int>{});
 	for (int i = 0; i < cuts.size(); ++i) {
-		//cout << "using A star path...\n";
-		//cout << depot[i] << ", " << pathSequence[cuts[i].start] << endl;
-		vector<int> p1 = A_star_path(depot[cut_depot[i]], pathSequence[cuts[i].start]);
-		//cout << pathSequence[(cuts[i].start + cuts[i].len - 1 + circleLen) % circleLen] << ", " << depot[i] << endl;
-		vector<int> p2 = A_star_path(pathSequence[(cuts[i].start + cuts[i].len - 1 + circleLen) % circleLen], depot[cut_depot[i]]);
-		//cout << "A star path ending...\n";
+		// //cout << "using A star path...\n";
+		// //cout << depot[i] << ", " << pathSequence[cuts[i].start] << endl;
+		// vector<int> p1 = A_star_path(depot[cut_depot[i]], pathSequence[cuts[i].start]);
+		// //cout << pathSequence[(cuts[i].start + cuts[i].len - 1 + circleLen) % circleLen] << ", " << depot[i] << endl;
+		// vector<int> p2 = A_star_path(pathSequence[(cuts[i].start + cuts[i].len - 1 + circleLen) % circleLen], depot[cut_depot[i]]);
+		// //cout << "A star path ending...\n";
+		// for (int j = 0; j < cuts[i].len; ++j)	p1.push_back(pathSequence[(cuts[i].start + j) % circleLen]);
+
+		// p1.insert(p1.end(), p2.begin(), p2.end());
+		vector<int> p1;
 		for (int j = 0; j < cuts[i].len; ++j)	p1.push_back(pathSequence[(cuts[i].start + j) % circleLen]);
-
-		p1.insert(p1.end(), p2.begin(), p2.end());
-
 		path_for_each_robot[i] = p1;
 	}
 
+	// TODO : 检查起点和终点是否对应
 	Mat path_final(depot.size(), vector<int>{});
-	for (int i = 0; i < depot.size(); ++i) {
-		path_final[i] = path_for_each_robot[cut_depot[i]];
+	for (int i = 0; i < cuts.size(); ++i) {
+		path_final[cut_depot[i]] = path_for_each_robot[i];
+
+		// 如果完成覆盖后回到原点的话就把起始点加入
+		if(coverAndReturn){
+			path_final[cut_depot[i]].push_back(depot[cut_depot[i]]);
+		}
 	}
 
 	return path_final;

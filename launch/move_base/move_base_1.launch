@@ -10,24 +10,25 @@
 
   <arg name="odom_frame_id"   default="robot1_tf/odom"/>
   <arg name="base_frame_id"   default="robot1_tf/base_footprint"/>
-  <arg name="global_frame_id" default="/map"/>
+  <arg name="global_frame_id" default="map"/>
   <arg name="odom_topic" default="/robot1/odom" />
   <arg name="laser_topic" default="/robot1/laser/scan" />
   <arg name="move_forward_only" default="false"/>
   <!--<arg name="custom_param_file" default="$(find turtlebot_navigation)/param/dummy.yaml"/>-->
 
   <node pkg="move_base" type="move_base" respawn="false" name="move_base1" output="screen">
-    <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+    <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
     <rosparam file="$(find MSTC_Star_update)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
     <rosparam file="$(find MSTC_Star_update)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />
     <rosparam file="$(find MSTC_Star_update)/param/local_costmap_params.yaml" command="load" />
     <rosparam file="$(find MSTC_Star_update)/param/global_costmap_params.yaml" command="load" />
-    <rosparam file="$(find MSTC_Star_update)/param/dwa_local_planner_params.yaml" command="load" />
+    <rosparam file="$(find MSTC_Star_update)/param/teb_local_planner_params.yaml" command="load" />
+    <rosparam file="$(find MSTC_Star_update)/param/base_global_planner_param.yaml" command="load" />
     <rosparam file="$(find MSTC_Star_update)/param/move_base_params.yaml" command="load" />
-    <param name="DWAPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)" />
+    <param name="TebLocalPlannerROS/min_vel_x" value="0.0" if="$(arg move_forward_only)" />
 
-    <param name="controller_frequency" value="5.0"/>
-    <param name="controller_patiente" value="15.0"/>
+    <param name="controller_frequency" value="10.0"/>
+    <param name="controller_patiente" value="5.0"/>
 
     <!--
     <rosparam file="$(find MSTC_Star_update)/param/global_planner_params.yaml" command="load" />
@@ -42,12 +43,12 @@
     <param name="global_costmap/robot_base_frame" value="$(arg base_frame_id)"/>
     <param name="local_costmap/global_frame" value="$(arg odom_frame_id)"/>
     <param name="local_costmap/robot_base_frame" value="$(arg base_frame_id)"/>
-    <param name="DWAPlannerROS/global_frame_id" value="$(arg odom_frame_id)"/>
+    <param name="TebLocalPlannerROS/global_frame_id" value="$(arg odom_frame_id)"/>
 
     <remap from="cmd_vel" to="/robot1/cmd_vel"/>
     <remap from="odom" to="$(arg odom_topic)"/>
     <remap from="scan" to="$(arg laser_topic)"/>
-    <remap from="map" to="/map" />
+    <remap from="map" to="map" />
     <remap from="/move_base_simple/goal"                                           to="/robot1/move_base_simple/goal" />
     <remap from="/move_base/TebLocalPlannerROS/global_plan"                        to="/robot1/move_base/TebLocalPlannerROS/global_plan" />
     <remap from="/move_base/TebLocalPlannerROS/local_plan"                         to="/robot1/move_base/TebLocalPlannerROS/local_plan" />

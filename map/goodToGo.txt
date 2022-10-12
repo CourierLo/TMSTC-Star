@@ -1,0 +1,5 @@
+Denver_0_1024.png     res: 0.05 scale: 10
+Denver_1_1024.png
+Denver_2_1024.png
+NewYork_0_1024.png
+Shanghai_0_1024.png

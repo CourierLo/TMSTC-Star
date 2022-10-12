@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _PATH_CUT_H
+#define _PATH_CUT_H
+
 #include <vector>
 #include <queue>
 #include <iostream>
@@ -6,11 +8,19 @@
 #include <algorithm>
 #include <cmath>
 
+// ros header
+#include <ros/ros.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Path.h>
+#include <nav_msgs/GetPlan.h>
+#include <nav_msgs/OccupancyGrid.h>
+
 using std::vector;
 using std::pair;
 using std::cout;
 using std::endl;
 using std::unordered_set;
+using std::ifstream;
 
 const double eps = 1e-7;
 
@@ -33,7 +43,8 @@ typedef struct Node {
 } node ;
 
 #define reshape(i, j) (int)((i) * bigcols + (j))
-#define ONE_TURN_VAL 2.0
+#define ONE_TURN_VAL 0.0
+#define PI 3.1415926
 //#define CUT_TURN_AND_LENGTH(i) (pathValue[(cuts[i].start + cuts[i].len - 1) % circleLen] - pathValue[cuts[i].start] + 1)  // WRONG£¡£¡£¡
 
 class PathCut {
@@ -52,8 +63,14 @@ class PathCut {
 	vector<int> depot_cut;  // from depot to cuts
 	vector<int> cut_depot;
 
+	bool useROSPlanner;
+	bool coverAndReturn;
+	ros::NodeHandle* nh;
+	nav_msgs::OccupancyGridPtr globalCostmap;
+
 public:
-	PathCut(Mat& map, Mat& region, Mat& tree, vector<int>& robotInitPos) : Map(map), Region(region), MST(tree), depot(robotInitPos) {
+	PathCut(Mat& map, Mat& region, Mat& tree, vector<int>& robotInitPos, ros::NodeHandle* _nh, nav_msgs::OccupancyGridPtr _globalCostmap, bool _useROSPlanner = false, bool _coverAndReturn = false) : 
+				Map(map), Region(region), MST(tree), depot(robotInitPos), nh(_nh), globalCostmap(_globalCostmap), useROSPlanner(_useROSPlanner), coverAndReturn(_coverAndReturn) {
 		bigrows = Region.size();
 		bigcols = Region[0].size();
 		smallrows = Map.size();
@@ -77,8 +94,12 @@ public:
 	Mat cutSolver();
 	int getTurnsNum();
 	double getTurnAndLength(int i);
+	double ROSGlobalPlannerCost(int start_id, int goal_id);
+	double estimatePathCost(nav_msgs::Path& path);
 
 	bool isSameLine(int a, int b, int c) {
 		return a + c == 2 * b;
 	}
 };
+
+#endif
