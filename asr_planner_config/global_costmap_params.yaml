@@ -1,0 +1,13 @@
+global_costmap:
+  global_frame: map 
+  inflation_radius: 0.65
+  allow_unknown: false
+  robot_base_frame: base_footprint
+
+  update_frequency: 2.0
+  publish_frequency: 0.0
+  static_map: true
+
+global_costmap/obstacle_layer:
+  #No local, prehaps temporary, obstacles should be influence the global costmap.
+  enabled: true

@@ -123,7 +123,7 @@ public:
       } else if(shape == "KRUSKAL"){
         MST = div.kruskalSolver();
       } else if(shape == "DINIC"){
-        MST = dinic.dinic_solver((*darp).robotRegion[i]);
+        MST = dinic.dinic_solver((*darp).robotRegion[i], true);
       }
 
       allPaths.push_back(MST2Path(index));

@@ -1,0 +1,8 @@
+obstacle_range: 5.0
+raytrace_range: 3.0
+robot_radius: 0.38
+
+#unknown_cost_value: 99
+observation_sources: scan
+transform_tolerance : 2.0
+laser_scan_sensor: {sensor_frame: base_laser, data_type: LaserScan, topic: scan, marking: true, clearing: true}

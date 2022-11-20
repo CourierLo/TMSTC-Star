@@ -1,22 +1,6 @@
 #include <Dinic.h>
 
-Mat Dinic::dinic_solver(Mat& Map) {
-    /*while (scanf_s("%d%d%d", &R, &C, &N) != EOF && (R || C || N)) {
-        dinic.init(R + C + 5);
-        int r, c;
-        for (int i = 1; i <= N; i++) {
-            scanf_s("%d%d", &r, &c);
-            dinic.add_edge(r, c + R, 1);
-        }
-        for (int i = 1; i <= R; i++) dinic.add_edge(0, i, 1);
-        for (int i = 1; i <= C; i++) dinic.add_edge(i + R, C + R + 1, 1);
-        int ans = dinic.Maxflow(0, C + R + 1);
-        printf("%d ", ans);
-        dinic.get_cut(0);
-        for (int i = 1; i <= R; i++) if (!dinic.iscut[i])  printf("r%d ", i);
-        for (int i = 1; i <= C; i++) if (dinic.iscut[i + R]) printf("c%d ", i);
-        printf("\n");
-    }*/
+Mat Dinic::dinic_solver(Mat& Map, bool merge) {
     clock_t start, finish;
     start = clock();
     int n = Map.size(), m = Map[0].size();
@@ -87,6 +71,15 @@ Mat Dinic::dinic_solver(Mat& Map) {
             MST[RESHAPE(p.first, p.second + 1)].push_back(RESHAPE(p.first, p.second));
             unite(RESHAPE(p.first, p.second), RESHAPE(p.first, p.second + 1));
         }
+    }
+
+    // if apply m-TSP, don't merge
+    if(!merge){
+        finish = clock();
+        cout << "dinic partition total used time: " << finish - start << "\n";
+        cout << "-------------------Dinic Solver End-------------------\n\n";
+
+        return MST; 
     }
 
     mergeMST(MST, Map);

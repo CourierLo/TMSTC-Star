@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <unordered_set>
 #include <cstring>
+#include <map>
 
 using std::queue; 
 using std::vector;
@@ -37,6 +38,12 @@ class Dinic {
         int nxt, to, w, cap, flow;
     } e[nmax << 1];
 
+    struct Brick{
+        vector<int> pts;
+        vector<P> corner{{}, {}, {}, {}};
+        vector<P> mid_pts{{}, {}};
+    };
+
     struct tree_edge {
         int from;
         int to;
@@ -47,6 +54,7 @@ class Dinic {
     };
 
 public:
+    vector<Brick> bricks;
     void init(int n) {
         this->n = n;
         this->tot = 0;
@@ -126,112 +134,66 @@ public:
         else  return { (index - 1 - (n - 1) * m) % n,  (index - 1 - (n - 1) * m) / n };
     }
 
-    Mat dinic_solver(Mat& Map);
-        // /*while (scanf_s("%d%d%d", &R, &C, &N) != EOF && (R || C || N)) {
-        //     dinic.init(R + C + 5);
-        //     int r, c;
-        //     for (int i = 1; i <= N; i++) {
-        //         scanf_s("%d%d", &r, &c);
-        //         dinic.add_edge(r, c + R, 1);
-        //     }
-        //     for (int i = 1; i <= R; i++) dinic.add_edge(0, i, 1);
-        //     for (int i = 1; i <= C; i++) dinic.add_edge(i + R, C + R + 1, 1);
-        //     int ans = dinic.Maxflow(0, C + R + 1);
-        //     printf("%d ", ans);
-        //     dinic.get_cut(0);
-        //     for (int i = 1; i <= R; i++) if (!dinic.iscut[i])  printf("r%d ", i);
-        //     for (int i = 1; i <= C; i++) if (dinic.iscut[i + R]) printf("c%d ", i);
-        //     printf("\n");
-        // }*/
-        // clock_t start, finish;
-        // start = clock();
-        // int n = Map.size(), m = Map[0].size();
+    Mat dinic_solver(Mat& Map, bool merge);
 
-        // dinic.init(SINK + 5);
-        // int res = 0;
-        // for (int i = 0; i < n; ++i) {
-        //     for (int j = 0; j < m; ++j) {
-        //         if (Map[i][j]) {
-        //             res++;
-        //             // connect source and sink
-        //             if (i > 0 && Map[i - 1][j]) {
-        //                 res--;
-        //                 pts[HORZ(i - 1, j)] = true;
-        //                 dinic.add_edge(SOURCE, HORZ(i - 1, j), 1);
-        //             }
-        //             if (j > 0 && Map[i][j - 1]) {
-        //                 res--;
-        //                 pts[VERT(i, j - 1)] = true;
-        //                 dinic.add_edge(VERT(i, j - 1), SINK, 1);
-        //             }
+    void formBricksForMTSP(Mat& Map){
+        // 遍历并查集， 同一个祖先的放在同一个brick, 注意bricks中的点才可以放入
+        bricks.clear();
+        int cnt = 0;
+        std::map<int, int> label;
+        for(int i = 0; i < Map.size() * Map[0].size(); ++i){
+            if(!Map[i / Map[0].size()][i % Map[0].size()])  continue;
 
-        //             // middle
-        //             if (i < n - 1 && j < m - 1 && Map[i + 1][j] && Map[i][j + 1]) {
-        //                 dinic.add_edge(HORZ(i, j), VERT(i, j), 1);
-        //                 pts[HORZ(i, j)] = pts[VERT(i, j)] = true;
-        //             }
-        //             if (i > 0 && j < m - 1 && Map[i - 1][j] && Map[i][j + 1]) {
-        //                 dinic.add_edge(HORZ(i - 1, j), VERT(i, j), 1);
-        //                 pts[HORZ(i - 1, j)] = pts[VERT(i, j)] = true;
-        //             }
-        //             if (i < n - 1 && j > 0 && Map[i + 1][j] && Map[i][j - 1]) {
-        //                 dinic.add_edge(HORZ(i, j), VERT(i, j - 1), 1);
-        //                 pts[HORZ(i, j)] = pts[VERT(i, j - 1)] = true;
-        //             }
-        //             if (i > 0 && j > 0 && Map[i - 1][j] && Map[i][j - 1]) {
-        //                 dinic.add_edge(HORZ(i - 1, j), VERT(i, j - 1), 1);
-        //                 pts[HORZ(i - 1, j)] = pts[VERT(i, j - 1)] = true;
-        //             }
-        //         }
-        //     }
-        // }
-        // cout << res + dinic.Maxflow(SOURCE, SINK) << "\n";
-        // dinic.get_cut(SOURCE);
+            int parent = find(i);
+            if(label.count(parent)){
+                bricks[label[parent]].pts.push_back(i);
+            } else {
+                bricks.push_back({});
+                label[parent] = cnt;
+                bricks[cnt].pts.push_back(i);
+                cnt++;
+            }
+        }
 
-        // int tot = Map.size() * Map[0].size();
-        // fa.resize(tot + 5);
-        // for (int i = 0; i < tot; ++i)	fa[i] = i;
-        // Mat MST(tot, vector<int>{});
+        cout << "The number of bricks: " << bricks.size() << "\n";
+        for(int i = 0; i < bricks.size(); ++i){
+            if(bricks[i].pts.size() == 1){
+                // single cell
+                int x = bricks[i].pts[0] / Map[0].size();
+                int y = bricks[i].pts[0] % Map[0].size();
+                bricks[i].corner[0] = { 2 * x, 2 * y };
+                bricks[i].corner[1] = { 2 * x, 2 * y + 1 };
+                bricks[i].corner[2] = { 2 * x + 1, 2 * y };
+                bricks[i].corner[3] = { 2 * x + 1, 2 * y + 1 };
+            } else {
+                sort(bricks[i].pts.begin(), bricks[i].pts.end());
+                // vertical or horizontal ? 
+                int x1 = bricks[i].pts[0] / Map[0].size();
+                int x2 = bricks[i].pts.back() / Map[0].size();
+                int y1 = bricks[i].pts[0] % Map[0].size();
+                int y2 = bricks[i].pts.back() % Map[0].size();
+                if(x1 == x2){
+                    // horizontal
+                    bricks[i].corner[0] = { 2 * x1, 2 * y1 };
+                    bricks[i].corner[1] = { 2 * x2, 2 * y2 + 1 };
+                    bricks[i].corner[2] = { 2 * x1 + 1, 2 * y1 };
+                    bricks[i].corner[3] = { 2 * x2 + 1, 2 * y2 + 1 };
+                } else {
+                    // vertical
+                    bricks[i].corner[0] = { 2 * x1, 2 * y1 };
+                    bricks[i].corner[1] = { 2 * x2 + 1, 2 * y2};
+                    bricks[i].corner[2] = { 2 * x1, 2 * y1 + 1 };
+                    bricks[i].corner[3] = { 2 * x2 + 1, 2 * y2 + 1 };
+                }
 
-        // // horizontal node, make vertical edges
-        // for (int i = 1; i <= (n - 1) * m; ++i) {
-        //     P p = getEdgeCoor(i, Map);
-        //     if (dinic.iscut[i] && pts[i]) {
-        //         // cout << i << " H: " << p.first << ", " << p.second << "\n";
-        //         MST[RESHAPE(p.first, p.second)].push_back(RESHAPE(p.first + 1, p.second));
-        //         MST[RESHAPE(p.first + 1, p.second)].push_back(RESHAPE(p.first, p.second));
-        //         unite(RESHAPE(p.first, p.second), RESHAPE(p.first + 1, p.second));
-        //     }
-        // }
-
-        // // vertical node, make horizontal edges
-        // for (int i = 1; i <= n * (m - 1); ++i) {
-        //     P p = getEdgeCoor(i + (n - 1) * m, Map);
-        //     if (!dinic.iscut[i + (n - 1) * m] && pts[i + (n - 1) * m]) {
-        //         // cout << i + (n - 1) * m << " V: " << p.first << ", " << p.second << "\n";
-        //         MST[RESHAPE(p.first, p.second)].push_back(RESHAPE(p.first, p.second + 1));
-        //         MST[RESHAPE(p.first, p.second + 1)].push_back(RESHAPE(p.first, p.second));
-        //         unite(RESHAPE(p.first, p.second), RESHAPE(p.first, p.second + 1));
-        //     }
-        // }
-
-        // mergeMST(MST, Map);
-        // //cout << pts.size() << endl;
-        // finish = clock();
-
-        // int totalTurns = 0;
-        // for (int i = 0; i < MST.size(); ++i) {
-        //     totalTurns += getVertexVal(MST, i);
-        // }
-        // cout << "rect dinic MST number of turns: " << totalTurns << endl;
-
-        // checkMST(MST, Map);
-
-        // cout << "dinic total used time: " << finish - start << "\n";
-        // cout << "-------------------Dinic Solver End-------------------\n\n";
-
-        // return MST;
-    
+                // compute mid pts
+                bricks[i].mid_pts[0] = { (bricks[i].corner[0].first + bricks[i].corner[1].first) / 2,
+                                         (bricks[i].corner[0].second + bricks[i].corner[1].second) / 2 };
+                bricks[i].mid_pts[1] = { (bricks[i].corner[2].first + bricks[i].corner[3].first) / 2,
+                                         (bricks[i].corner[2].second + bricks[i].corner[3].second) / 2 };
+            }
+        }
+    }
 
     bool checkMST(Mat& graph, Mat& Map) {
         int vertexNum = 0;

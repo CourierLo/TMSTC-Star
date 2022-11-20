@@ -13,6 +13,7 @@
 #include <boost/bind.hpp>
 #include <DARPPlanner.h>
 #include <Dinic.h>
+#include <m_TSP.h>
 
 using std::cout;
 using std::endl;
@@ -67,7 +68,11 @@ private:
     
     std::fstream test_data_file;
 
-    bool useROSPlanner, coverAndReturn;
+    bool useROSPlanner, coverAndReturn, coverage_action;
+
+    // GA config
+    int GA_max_iter, unchanged_iter;
+    MTSP *mtsp;
 
 public:
     // firstly get robot's origin position and trans to index
@@ -117,6 +122,21 @@ public:
 
         if(!n.getParam("/map_scale", map_scale)){
             ROS_ERROR("Wrong scale!");
+            return ;
+        }
+
+        if(!n.getParam("/coverage_action", coverage_action)){
+            ROS_ERROR("Tell me if you want to let robots move");
+            return ;
+        }
+
+        if(!n.getParam("/GA_max_iter", GA_max_iter)){
+            ROS_ERROR("PLease specify GA times");
+            return ;
+        }
+
+        if(!n.getParam("/unchanged_iter", unchanged_iter)){
+            ROS_ERROR("GA break iter");
             return ;
         }
 
@@ -201,8 +221,8 @@ public:
                 ROS_ERROR("Please check shape's name in launch file!");
                 return false;
             }
-        } else {
-            if(MST_shape == "DINIC")    MST = dinic.dinic_solver(Map);
+        } else if(allocate_method == "MSTC"){
+            if(MST_shape == "DINIC")    MST = dinic.dinic_solver(Map, true);
             else {
                 Division mstc_div(Map);
                 if(MST_shape == "RECT_DIV")             MST = mstc_div.rectDivisionSolver();
@@ -221,6 +241,42 @@ public:
 
             PathCut cut(Map, Region, MST, robot_init_pos, nh, boost::make_shared<nav_msgs::OccupancyGrid>(map), useROSPlanner, coverAndReturn);
             paths_idx = cut.cutSolver();
+        } else if(allocate_method == "MTSP"){
+            // crossover_pb, mutation_pb, elite_rate, sales_men, max_iter, ppl_sz, unchanged_iter;
+            GA_CONF conf{ 0.9, 0.01, 0.3, robot_num, GA_max_iter, 30, unchanged_iter };
+            if(MST_shape == "HEURISTIC"){
+
+            } else if(MST_shape == "OARP"){
+                dinic.dinic_solver(Map, false);
+                dinic.formBricksForMTSP(Map);
+                mtsp = new MTSP(conf, dinic, robot_init_pos, cmw, coverAndReturn);
+
+                for(int i = 0; i < GA_max_iter; ++i){
+                    mtsp->GANextGeneration();
+                    if(mtsp->unchanged_gens >= unchanged_iter)   break;
+                    if(i % 100 == 0){
+                        // display cost for debugging
+                        cout << "GA-cost: " << mtsp->best_val << "\n";
+                    }
+                }
+
+                paths_idx = mtsp->MTSP2Path();
+
+                for(int i = 0; i < paths_idx.size(); ++i){
+                    cout << "path " << i << ": ";
+                    for(int j = 0; j < paths_idx[i].size(); ++j){
+                        cout << paths_idx[i][j] << " ";
+                    }
+                    cout << "\n";
+                }
+                return false;
+            } else {
+                ROS_ERROR("Please check shape's name in launch file!");
+                return false;
+            }
+        } else {
+            ROS_ERROR("Please check allocated method's name in launch file!");
+            return false;
         }
         toc = ros::Time::now().toSec();
         test_data_file.open(data_file_path, ios::in | ios::out | ios::app);
@@ -238,12 +294,9 @@ public:
         paths.resize(paths_idx.size());
         for(int i = 0; i < paths_idx.size(); ++i){
             paths[i].header.frame_id = "map";
-            paths[i].poses.resize(paths_idx[i].size());
             for(int j = 0; j < paths_idx[i].size(); ++j){
                 int dy = paths_idx[i][j] / cmw;
                 int dx = paths_idx[i][j] % cmw;
-                paths[i].poses[j].pose.position.x = dx * cmres + 0.25;
-                paths[i].poses[j].pose.position.y = dy * cmres + 0.25;
 
                 // 判断每个goal的yaw
                 // 得写一个更加通用的比较行列的方式
@@ -251,7 +304,23 @@ public:
                 if(j < paths_idx[i].size() - 1){
                     int dx1 = paths_idx[i][j + 1] % cmw, dx2 = paths_idx[i][j] % cmw;
                     int dy1 = paths_idx[i][j + 1] / cmw, dy2 = paths_idx[i][j] / cmw;
-                   
+
+                    if(j > 0){
+                        int dx3 = paths_idx[i][j - 1] % cmw;
+                        int dy3 = paths_idx[i][j - 1] / cmw;
+
+                        // a turn ocurr
+                        if((2 * dx2 != (dx1 + dx3)) || (2 * dy2 != (dy1 + dy3))){
+                            if(dx3 == dx2)  yaw = dy2 > dy3 ? PI / 2 : -PI / 2;
+                            if(dy3 == dy2)  yaw = dx2 > dx3 ? 0 : PI;
+                            paths[i].poses.push_back({});
+                            paths[i].poses.back().pose.position.x = dx * cmres + 0.25;
+                            paths[i].poses.back().pose.position.y = dy * cmres + 0.25;
+                            paths[i].poses.back().pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
+                        }
+                    }
+                    
+
                     if(dx1 == dx2)      yaw = dy1 > dy2 ? PI / 2 : -PI / 2;
                     else if(dy1 == dy2) yaw = dx1 > dx2 ? 0 : PI;
                     else{
@@ -260,7 +329,10 @@ public:
                     }
                 }
                 // yaw转四元数
-                paths[i].poses[j].pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
+                paths[i].poses.push_back({});
+                paths[i].poses.back().pose.position.x = dx * cmres + 0.25;
+                paths[i].poses.back().pose.position.y = dy * cmres + 0.25;
+                paths[i].poses.back().pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
             }
         }
 
@@ -285,7 +357,7 @@ public:
             string ac_topic = "/robot" + std::to_string(i + 1) + "/move_base";
             ac_ptr[i] = new MoveBaseClient(ac_topic, true);
             while(!(*ac_ptr[i]).waitForServer(ros::Duration(5.0))){
-                ROS_INFO("Waiting for the move_base action server to come up");
+                ROS_INFO("Waiting for the move_base_%d action server to come up", i);
             }
         }
 
@@ -294,42 +366,51 @@ public:
         int counter = 0;
         vector<bool> finish_cover(robot_num, false);
         bool finish_task = false;
+        int spin_times = 0;     //控制路径发布频率
+        ros::Rate r(20);
         while(ros::ok()){
             ros::spinOnce();   // 得先收到机器人初始点位置才行
 
-            for(int i = 0; i < robot_num; ++i){
-                if(goal_ptr[i] == paths[i].poses.size() && (*ac_ptr[i]).getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-                    if(!counter)    tocc(FIRST);
-                    if(!finish_cover[i]){
-                        counter++;
-                        finish_cover[i] = true;
+            if(coverage_action){
+                for(int i = 0; i < robot_num; ++i){
+                    if(goal_ptr[i] == paths[i].poses.size() && (*ac_ptr[i]).getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
+                        if(!counter)    tocc(FIRST);
+                        if(!finish_cover[i]){
+                            counter++;
+                            finish_cover[i] = true;
+                        }
+                        continue;
                     }
-                    continue;
-                }
 
-                // checkActionState(*ac_ptr[i]);
-                // if one robot is near enough(distance less than tolerance), then goes for next goal(reachGoal's work)
-                if(!goal_ptr[i] || reachGoal(i, goal_ptr[i] - 1) || (*ac_ptr[i]).getState() == actionlib::SimpleClientGoalState::SUCCEEDED
-                   || (*ac_ptr[i]).getState() == actionlib::SimpleClientGoalState::ABORTED){
-                    if(goal_ptr[i] - 1 == paths_cpt_idx[i][cpt_ptr[i]])
-                        cpt_ptr[i]++;
+                    // checkActionState(*ac_ptr[i]);
+                    // if one robot is near enough(distance less than tolerance), then goes for next goal(reachGoal's work)
+                    if(!goal_ptr[i] || reachGoal(i, goal_ptr[i] - 1) || (*ac_ptr[i]).getState() == actionlib::SimpleClientGoalState::SUCCEEDED
+                            || (*ac_ptr[i]).getState() == actionlib::SimpleClientGoalState::ABORTED){
+                        if(goal_ptr[i] - 1 == paths_cpt_idx[i][cpt_ptr[i]])
+                            cpt_ptr[i]++;
 
-                    sendOneGoal(i, goal_ptr[i]++, *ac_ptr[i]);
+                        sendOneGoal(i, goal_ptr[i]++, *ac_ptr[i]);
+                    }
                 }
-            }
-            
-            if(!finish_task && counter == robot_num){
-                tocc(LAST);
-                finish_task = true;
+                
+                if(!finish_task && counter == robot_num){
+                    tocc(LAST);
+                    finish_task = true;
+                }
             }
 
             // show plan path
-            for(int i = 0; i < robot_num; i++)
-                path_publishers[i].publish(paths[i]);
+            if(spin_times == 10){
+                for(int i = 0; i < robot_num; i++)  path_publishers[i].publish(paths[i]);
+                
+                spin_times = 0;
+            }
 
             // TODO: show actual path
+            
+            spin_times++;
 
-            ros::Duration(0.4).sleep();
+            r.sleep();
         }
     }
 
@@ -379,6 +460,10 @@ public:
             bool cpt_flag = false;
             for(int step = 1; step < paths_idx[i].size() - 1; step++){
                 cpt_flag = !isSameLine(paths_idx[i][step - 1], paths_idx[i][step], paths_idx[i][step + 1]);
+                if(allocate_method == "MTSP" && mtsp->pt_brickid.count(paths_idx[i][step])){
+                    cpt_flag = true;
+                }
+
                 if(!cpt_flag && interval){
                     interval--;
                 } else {
@@ -525,16 +610,6 @@ public:
                 }
             }
             // end converting
-
-            // checking the coverage map
-            // for(int row = coverage_map.info.height - 1; row >= 0; --row){
-            //     for(int col = 0; col < coverage_map.info.width; ++col){
-            //         cout << (int)coverage_map.data[row * coverage_map.info.width + col] << " ";
-            //     }
-            //     cout << endl;
-            // }
-            // cout << endl;
-            // end checking
         }
     }
 
@@ -554,14 +629,23 @@ public:
         for(int i = 0; i < cmh / 2; ++i){
             for(int j = 0; j < cmw / 2; ++j){
                 if(coverage_map.data[(2 * i) * cmw + (2 * j)] && coverage_map.data[(2 * i) * cmw + (2 * j + 1)] &&
-                   coverage_map.data[(2 * i + 1) * cmw + (2 * j)] && coverage_map.data[(2 * i + 1) * cmw + (2 * j + 1)]){
-                   Map[i][j] = 1;    
+                    coverage_map.data[(2 * i + 1) * cmw + (2 * j)] && coverage_map.data[(2 * i + 1) * cmw + (2 * j + 1)]){
+                    Map[i][j] = 1;    
                 }else{
                     Map[i][j] = 0;
                 }
                 map_data_file << Map[i][j];
             }
             map_data_file << "\n";
+        }
+
+        for (int i = 0; i < Map.size(); ++i) {
+            for (int j = 0; j < Map[0].size(); ++j) {
+                Region[2 * i][2 * j] = Map[i][j];
+                Region[2 * i][2 * j + 1] = Map[i][j];
+                Region[2 * i + 1][2 * j] = Map[i][j];
+                Region[2 * i + 1][2 * j + 1] = Map[i][j];
+            }
         }
 
         map_data_file.close();

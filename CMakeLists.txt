@@ -141,6 +141,10 @@ add_library(ACO
 add_library(Dinic
   src/Dinic/Dinic.cpp
 )
+
+add_library(MTSP
+  src/m_TSP/m_TSP.cpp
+)
 # add_library(DARPO
 #   src/DARP/DARPPlanner.cpp
 # )
@@ -172,6 +176,7 @@ target_link_libraries(map_transformer
     Division
     ACO
     Dinic
+    MTSP
 )
 
 target_link_libraries(realTf_broadcaster
@@ -183,6 +188,7 @@ target_link_libraries(algo_test
     Division
     ACO
     Dinic
+    MTSP
 )
 
 #############
