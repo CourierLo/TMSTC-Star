@@ -14,6 +14,7 @@
 #include <DARPPlanner.h>
 #include <Dinic.h>
 #include <m_TSP.h>
+#include <HeuristicPartition.h>
 
 using std::cout;
 using std::endl;
@@ -73,6 +74,9 @@ private:
     // GA config
     int GA_max_iter, unchanged_iter;
     MTSP *mtsp;
+
+    // heuristic
+    int hp_max_iter;
 
 public:
     // firstly get robot's origin position and trans to index
@@ -137,6 +141,11 @@ public:
 
         if(!n.getParam("/unchanged_iter", unchanged_iter)){
             ROS_ERROR("GA break iter");
+            return ;
+        }
+
+        if(!n.getParam("/hp_max_iter", hp_max_iter)){
+            ROS_ERROR("specify heuristic solver iteration.");
             return ;
         }
 
@@ -233,6 +242,10 @@ public:
                     ACO_STC aco(1, 1, 1, 0.15, 60, 300, Map, MST);
                     MST = aco.aco_stc_solver();
                 }
+                else if(MST_shape == "HEURISTIC"){
+                    HeuristicSolver::HeuristicPartition hp(Map, hp_max_iter);
+                    MST = hp.hpSolver(true);
+                }
                 else{
                     ROS_ERROR("Please check shape's name in launch file!");
                     return false;
@@ -243,10 +256,11 @@ public:
             paths_idx = cut.cutSolver();
         } else if(allocate_method == "MTSP"){
             // crossover_pb, mutation_pb, elite_rate, sales_men, max_iter, ppl_sz, unchanged_iter;
-            GA_CONF conf{ 0.9, 0.01, 0.3, robot_num, GA_max_iter, 30, unchanged_iter };
+            GA_CONF conf{ 0.9, 0.01, 0.3, robot_num, GA_max_iter, 60, unchanged_iter };
             if(MST_shape == "HEURISTIC"){
 
             } else if(MST_shape == "OARP"){
+                cout << Map.size() << ", " << Map[0].size() << "\n";
                 dinic.dinic_solver(Map, false);
                 dinic.formBricksForMTSP(Map);
                 mtsp = new MTSP(conf, dinic, robot_init_pos, cmw, coverAndReturn);
@@ -254,7 +268,7 @@ public:
                 for(int i = 0; i < GA_max_iter; ++i){
                     mtsp->GANextGeneration();
                     if(mtsp->unchanged_gens >= unchanged_iter)   break;
-                    if(i % 100 == 0){
+                    if(i % 1000 == 0){
                         // display cost for debugging
                         cout << "GA-cost: " << mtsp->best_val << "\n";
                     }
@@ -269,7 +283,7 @@ public:
                     }
                     cout << "\n";
                 }
-                return false;
+                // return false;
             } else {
                 ROS_ERROR("Please check shape's name in launch file!");
                 return false;
@@ -302,31 +316,10 @@ public:
                 // 得写一个更加通用的比较行列的方式
                 double yaw = 0;
                 if(j < paths_idx[i].size() - 1){
-                    int dx1 = paths_idx[i][j + 1] % cmw, dx2 = paths_idx[i][j] % cmw;
-                    int dy1 = paths_idx[i][j + 1] / cmw, dy2 = paths_idx[i][j] / cmw;
+                    int dx1 = paths_idx[i][j + 1] % cmw;
+                    int dy1 = paths_idx[i][j + 1] / cmw;
 
-                    if(j > 0){
-                        int dx3 = paths_idx[i][j - 1] % cmw;
-                        int dy3 = paths_idx[i][j - 1] / cmw;
-
-                        // a turn ocurr
-                        if((2 * dx2 != (dx1 + dx3)) || (2 * dy2 != (dy1 + dy3))){
-                            if(dx3 == dx2)  yaw = dy2 > dy3 ? PI / 2 : -PI / 2;
-                            if(dy3 == dy2)  yaw = dx2 > dx3 ? 0 : PI;
-                            paths[i].poses.push_back({});
-                            paths[i].poses.back().pose.position.x = dx * cmres + 0.25;
-                            paths[i].poses.back().pose.position.y = dy * cmres + 0.25;
-                            paths[i].poses.back().pose.orientation = tf::createQuaternionMsgFromYaw(yaw);
-                        }
-                    }
-                    
-
-                    if(dx1 == dx2)      yaw = dy1 > dy2 ? PI / 2 : -PI / 2;
-                    else if(dy1 == dy2) yaw = dx1 > dx2 ? 0 : PI;
-                    else{
-                        // last and second last
-                        yaw = atan2(1.0 * (dy1 - dy2), 1.0 * (dx1 - dx2));
-                    }
+                    yaw = atan2(1.0 * (dy1 - dy), 1.0 * (dx1 - dx));
                 }
                 // yaw转四元数
                 paths[i].poses.push_back({});

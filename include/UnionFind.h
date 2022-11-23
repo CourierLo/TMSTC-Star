@@ -6,7 +6,16 @@ class UnionFind{
     vector<int> fa;
 
 public:
+    UnionFind(){
+
+    }
+    
     UnionFind(int sz){
+        fa.resize(sz + 5, 0);
+        for(int i = 0; i <= sz; ++i)    fa[i] = i;
+    }
+
+    void init(int sz){
         fa.resize(sz + 5, 0);
         for(int i = 0; i <= sz; ++i)    fa[i] = i;
     }

@@ -145,6 +145,10 @@ add_library(Dinic
 add_library(MTSP
   src/m_TSP/m_TSP.cpp
 )
+
+add_library(HeuristicPartition
+  src/Heuristic/HeuristicPartition.cpp
+)
 # add_library(DARPO
 #   src/DARP/DARPPlanner.cpp
 # )
@@ -177,6 +181,7 @@ target_link_libraries(map_transformer
     ACO
     Dinic
     MTSP
+    HeuristicPartition
 )
 
 target_link_libraries(realTf_broadcaster
@@ -189,6 +194,7 @@ target_link_libraries(algo_test
     ACO
     Dinic
     MTSP
+    HeuristicPartition
 )
 
 #############

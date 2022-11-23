@@ -19,6 +19,8 @@ using std::cout;
 using std::endl;
 using std::pair;
 
+#define UNREACHABLE 10000000
+
 struct GA_CONF{
     double crossover_pb;
     double mutation_pb;
@@ -92,8 +94,8 @@ public:
                 mid[pts.size() - 2] = mid_pts.size() - 2;
                 mid[pts.size() - 1] = mid_pts.size() - 1;
 
-                int mid_pt_id1 = dinic.bricks[i].mid_pts[0].first + dinic.bricks[i].mid_pts[0].second;
-                int mid_pt_id2 = dinic.bricks[i].mid_pts[1].first + dinic.bricks[i].mid_pts[1].second;
+                int mid_pt_id1 = dinic.bricks[i].mid_pts[0].first * cmw + dinic.bricks[i].mid_pts[0].second;
+                int mid_pt_id2 = dinic.bricks[i].mid_pts[1].first * cmw + dinic.bricks[i].mid_pts[1].second;
                 pt_brickid[mid_pt_id1] = i;
                 pt_brickid[mid_pt_id2] = i;
             }
@@ -107,23 +109,26 @@ public:
             }
         }
 
+        for(int i = 0; i < dis.size(); ++i)
+            dis[0][i] = dis[i][0] = UNREACHABLE;
+        
+        // large penalty for an empty loop
+        for(int i = 0; i < dis.size(); ++i)
+            dis[i][i] = UNREACHABLE;
+
         // mid point to it's non neighbor will be unreachable
         // we need to use the actual shortest path
         for(int i = 0; i < mid_pts.size(); ++i){
             for(int j = 0; j < pts.size(); ++j){
                 // maybe add a penalty here
                 if(j != mid_pts[i].pass_id1 && j != mid_pts[i].pass_id2 && j != mid_pts[i].id)
-                    dis[mid_pts[i].id][j] = dis[j][mid_pts[i].id] = distance(pts[mid_pts[i].id], pts[j]) + 1000;
-                else
-                    dis[mid_pts[i].id][j] = dis[j][mid_pts[i].id] = distance(pts[mid_pts[i].id], pts[j]);
+                    dis[mid_pts[i].id][j] = dis[j][mid_pts[i].id] = UNREACHABLE;
+                else if(j == mid_pts[i].pass_id1 || j == mid_pts[i].pass_id2){
+                    dis[mid_pts[i].id][j] = dis[j][mid_pts[i].id] = distance(pts[mid_pts[i].id], pts[j]);   // must be 0. Otherwise GA bad result 
+                    // = distance(pts[mid_pts[i].id], pts[j])
+                }
             }
         }
-
-        for(int i = 0; i < dis.size(); ++i)
-            dis[0][i] = dis[i][0] = 0;
-        
-        // large penalty for an empty loop
-        dis[0][0] = 0x7fffff;
 
         // for(int i = 0; i < dis.size(); ++i){
         //     for(int j = 0; j < dis[0].size(); ++j){
@@ -140,8 +145,8 @@ public:
     }
 
     uint64_t distance(P x, P y){
-        return (uint64_t)ceil(sqrt((x.first - y.first) * (x.first - y.first) + 
-                         (x.second - y.second) * (x.second - y.second)));
+        return (uint64_t)ceil(sqrt(1.0 * (x.first - y.first) * (x.first - y.first) + 
+                         1.0 * (x.second - y.second) * (x.second - y.second)));
     }
 
     void randomIndividual(vector<int>& individual){
