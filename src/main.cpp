@@ -79,7 +79,7 @@ int main() {
 	// 用下面这个
 	// ---------------------------------------------------------
 	int h, w;
-	ifstream infile("/home/courierlo/test_data_sample/random_20_10.txt");
+	ifstream infile("/home/courierlo/test_data_sample/Denver_2.txt");
 	infile >> h >> w;
 	cout << h << " " << w << endl;
 	Mat Map(h, vector<int>(w, 0));
@@ -118,10 +118,10 @@ int main() {
 	}
 
 	cout << "begin hp...\n";
-	HeuristicSolver::HeuristicPartition hp(Map, 5000);
+	HeuristicSolver::HeuristicPartition hp(Map, 1000);
     Mat MST = hp.hpSolver(true);
 	// hp.showRanks();
-	// hp.checkConnectivity();
+	hp.checkConnectivity();
 	// 2021.11.27 这里的Map是缩小的，需要再构造原本的region
 	// Division div(Map);
 	// vector<int> robot_init_pos{ 15 }; // 11, 12, 9991, 9992

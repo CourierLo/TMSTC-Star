@@ -43,7 +43,7 @@ typedef struct Node {
 } node ;
 
 #define reshape(i, j) (int)((i) * bigcols + (j))
-#define ONE_TURN_VAL 0.0
+#define ONE_TURN_VAL 2.0
 #define PI 3.1415926
 //#define CUT_TURN_AND_LENGTH(i) (pathValue[(cuts[i].start + cuts[i].len - 1) % circleLen] - pathValue[cuts[i].start] + 1)  // WRONG£¡£¡£¡
 

@@ -6,7 +6,7 @@
 # free_thresh: 0.196
 
 #image: Real_world/Denver_2_1024.png
-image: indoor_real.pgm
+image: random_20_10.pgm
 resolution: 0.050000
 origin: [0.0, 0.0, 0.000000]
 negate: 0

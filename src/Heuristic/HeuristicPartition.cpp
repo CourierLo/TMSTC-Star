@@ -1,7 +1,7 @@
 #include <HeuristicPartition.h>
-
+// #define DEBUG
 vector<vector<HeuristicSolver::rect>> HeuristicSolver::HeuristicPartition::chessboardPartition() {
-	set<int> lineX{ 0, (int)Map.size() + 1 }, lineY{ 0, (int)Map[0].size() + 1 };
+	set<int> lineX{ 0, (int)Map.size() }, lineY{ 0, (int)Map[0].size() };
 	for (int i = 0; i < Map.size(); ++i) {
 		for (int j = 0; j < Map[0].size(); ++j) {
 			// if (Map[i][j])	continue;   //筛掉非ob的点
@@ -46,7 +46,6 @@ vector<vector<HeuristicSolver::rect>> HeuristicSolver::HeuristicPartition::chess
 	for (int i = 0; i < X.size() - 1; ++i) {
 		y = 0;
 		for (int j = 0; j < Y.size() - 1; ++j) {
-			//cout << x << " " << y << endl;
 			rec[i][j].empty = Map[x][y] == 0 ? true : false;
 			rec[i][j].coordinate.first = x;
 			rec[i][j].coordinate.second = y;
@@ -66,13 +65,13 @@ vector<vector<HeuristicSolver::rect>> HeuristicSolver::HeuristicPartition::chess
 	cout << "\n";
 
 	// check partition
-	for(int i = 0; i < rec.size(); ++i){
-		for(int j = 0; j < rec[0].size(); ++j){
-			if(!rec[i][j].empty){
-				cout << "(" << rec[i][j].coordinate.first << ", " << rec[i][j].coordinate.second << ")";
-			}
-		}
-	}
+	// for(int i = 0; i < rec.size(); ++i){
+	// 	for(int j = 0; j < rec[0].size(); ++j){
+	// 		if(!rec[i][j].empty){
+	// 			cout << "(" << rec[i][j].coordinate.first << ", " << rec[i][j].coordinate.second << ")";
+	// 		}
+	// 	}
+	// }
 #endif
 
 	cout << "\nchessboard partition successfully.\n";
@@ -200,7 +199,7 @@ vector<vector<HeuristicSolver::rect>> HeuristicSolver::HeuristicPartition::orien
 		}
 
 #ifdef DEBUG
-		if(i % 100 == 0)	cout << "No. " << i << "iter's totalranks: " << totalRanks << "\n";
+		if(iter % 100 == 0)	cout << "No. " << iter << "iter's totalranks: " << totalRanks << "\n";
 #endif
 
 	} // end for iter
@@ -221,6 +220,7 @@ void HeuristicSolver::HeuristicPartition::minrects2ranks(){
                 int col = minRanksRec[i][j].coordinate.second;
                 for(int dr = 0; dr < height[i]; ++dr){
                     for(int dc = 0; dc < width[j]; ++dc){
+						// cout << row + dr << " " << col + dc << "\n";
                         directionMap[row + dr][col + dc] = minRanksRec[i][j].dir == HORIZONTAL ? 'H' : 'V';
                     }
                 }
