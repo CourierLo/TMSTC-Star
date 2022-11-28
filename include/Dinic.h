@@ -137,7 +137,6 @@ public:
     Mat dinic_solver(Mat& Map, bool merge);
 
     void formBricksForMTSP(Mat& Map){
-        // 遍历并查集， 同一个祖先的放在同一个brick, 注意bricks中的点才可以放入
         bricks.clear();
         int cnt = 0;
         std::map<int, int> label;
@@ -231,9 +230,6 @@ public:
             que.push(edges[i]);
         }
 
-        //sort(edge.begin(), edge.end());
-        // 当然可以提前结束
-        //int cnt = 0;
         while (!que.empty()) {
             tree_edge curEdge = que.top();  que.pop();
             int v1 = curEdge.from, v2 = curEdge.to;
@@ -247,12 +243,9 @@ public:
                 continue;
             }
 
-            // 可以继续优化，随着MST连接，某些边的cost会发生变化，可以多用一个heap维护之
             graph[v1].push_back(v2);
             graph[v2].push_back(v1);
             unite(v1, v2);
-
-            //cnt++;
         }
 
     }

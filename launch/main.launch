@@ -188,9 +188,9 @@
   <param name = "/MST_shape" value = "DINIC" />
   <param name = "/data_file_path" value = "/home/courierlo/test_data/tmp.txt" />
   <param name = "/useROSPlanner" value = "true" />
-  <param name = "/coverAndReturn" value = "false" />
+  <param name = "/coverAndReturn" value = "true" />
   <param name = "/map_scale" value = "10" />
-  <param name = "/coverage_action" value = "false" />
+  <param name = "/coverage_action" value = "true" />
 
   <param name = "/GA_max_iter" value = "200000" />
   <param name = "/unchanged_iter" value = "2000" />
@@ -202,6 +202,5 @@
       <arg name="base_frame"  value="robot1_tf/base_footprint"/>
       <arg name="odom_frame"  value="robot1_tf/odom"/>
   </include> -->
-
 
 </launch>

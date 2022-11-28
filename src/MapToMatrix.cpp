@@ -213,7 +213,7 @@ public:
             cout << "No." << i + 1 << "'s robot initial position index: " << robot_index << endl;
         }
 
-        // construct MST and gain index path, 构造MST时并不需要机器人init index(region的index)，构造覆盖路径才需要
+        // construct MST and gain index path
         tic = ros::Time::now().toSec();
         if(allocate_method == "DARP"){
             // TODO
@@ -233,6 +233,7 @@ public:
         } else if(allocate_method == "MSTC"){
             if(MST_shape == "DINIC")    MST = dinic.dinic_solver(Map, true);
             else {
+                ONE_TURN_VAL = 0.0;
                 Division mstc_div(Map);
                 if(MST_shape == "RECT_DIV")             MST = mstc_div.rectDivisionSolver();
                 else if(MST_shape == "DFS_VERTICAL")    MST = mstc_div.dfsWithStackSolver(VERTICAL);
@@ -255,6 +256,8 @@ public:
             PathCut cut(Map, Region, MST, robot_init_pos, nh, boost::make_shared<nav_msgs::OccupancyGrid>(map), useROSPlanner, coverAndReturn);
             paths_idx = cut.cutSolver();
         } else if(allocate_method == "MTSP"){
+            ONE_TURN_VAL = 0.0;
+
             // crossover_pb, mutation_pb, elite_rate, sales_men, max_iter, ppl_sz, unchanged_iter;
             GA_CONF conf{ 0.9, 0.01, 0.3, robot_num, GA_max_iter, 60, unchanged_iter };
             if(MST_shape == "HEURISTIC"){
@@ -313,7 +316,6 @@ public:
                 int dx = paths_idx[i][j] % cmw;
 
                 // 判断每个goal的yaw
-                // 得写一个更加通用的比较行列的方式
                 double yaw = 0;
                 if(j < paths_idx[i].size() - 1){
                     int dx1 = paths_idx[i][j + 1] % cmw;
@@ -343,9 +345,8 @@ public:
     void sendGoals(){
         goal_ptr.resize(robot_num, 0);
         cpt_ptr.resize(robot_num, 0);
-        vector<MoveBaseClient*> ac_ptr(robot_num); //得用指针因为client不可复制
+        vector<MoveBaseClient*> ac_ptr(robot_num); 
 
-        // 注意第一个参数的名称，是****/goal的前缀而不是move_base节点的名字！！！
         for(int i = 0; i < robot_num; ++i){
             string ac_topic = "/robot" + std::to_string(i + 1) + "/move_base";
             ac_ptr[i] = new MoveBaseClient(ac_topic, true);
@@ -354,8 +355,6 @@ public:
             }
         }
 
-        // TODO:计时功能，还有判断所有机器人到达终点的判断
-        // 这里得用ros::ok infinite loop触发callback
         int counter = 0;
         vector<bool> finish_cover(robot_num, false);
         bool finish_task = false;
@@ -430,7 +429,6 @@ public:
 
         // ROS_INFO("\033[33mRobot %d's current position: %lf %lf", id, robot_pos[id].first, robot_pos[id].second);
 
-        // 这里可以展示真实覆盖路径
         // passed_path.header = poses.header;
         // geometry_msgs::PoseStamped p;
         // p.header = poses.header;
@@ -507,7 +505,6 @@ public:
 
     bool reachGoal(int id, int step){
         double dis = sqrt(pow(paths[id].poses[step].pose.position.x - robot_pos[id].first, 2) + pow(paths[id].poses[step].pose.position.y - robot_pos[id].second, 2));
-        // ROS_INFO("\033[35mRobot %d's distance from nearest checkpoint(%d): %lf", id, step, dis);
 
         if(paths_cpt_idx[id][cpt_ptr[id]] != step && dis <= tolerance_distance){
             ROS_INFO("\033[35mNext normal point is near enough.");
@@ -536,7 +533,6 @@ public:
         int dir[4][2] = { { 0, 1 }, { 0, -1 }, { -1, 0 }, { 1, 0 } };
         vector<vector<bool> > vis(coverage_map.info.width, vector<bool>(coverage_map.info.height, false));
         queue<pair<int, int> > que;
-         //cout << robot_pos.size() << endl;
         int sx = (robot_pos[0].first - coverage_map.info.origin.position.x) / coverage_map.info.resolution;
         int sy = (robot_pos[0].second - coverage_map.info.origin.position.y) / coverage_map.info.resolution;
         que.push({ sx, sy });
@@ -545,7 +541,6 @@ public:
         while(!que.empty()){
             pair<int, int> p = que.front();  que.pop();
             coverage_map.data[p.second * coverage_map.info.width + p.first] = 2;
-            // cout << p.first << " " << p.second << endl;
             for(int i = 0; i < 4; ++i){
                 int dx = p.first + dir[i][0], dy = p.second + dir[i][1];
                 if(dx >= 0 && dy >= 0 && dx < coverage_map.info.width && dy < coverage_map.info.height && coverage_map.data[dy * coverage_map.info.width + dx] && !vis[dx][dy]){
@@ -607,18 +602,10 @@ public:
     }
 
     void showMapAndRegionInf(){
-        std::fstream map_data_file;
-        map_data_file.open("/home/courierlo/test_data/map.txt", ios::in | ios::out | ios::app);
-        // map_data_file << "Region: \n";
-        // for(int i = 0; i < cmh; ++i){
-        //     for(int j = 0; j < cmw; ++j){
-        //         Region[i][j] = coverage_map.data[i * cmw + j];
-        //         map_data_file << Region[i][j] << " ";
-        //     }
-        //     map_data_file << "\n";
-        // }
-        map_data_file << "--------------------------------------------\n";
-        map_data_file << "Map: " << cmh / 2 << " " << cmw / 2 << "\n";
+        // std::fstream map_data_file;
+        // map_data_file.open("/home/courierlo/test_data/map.txt", ios::in | ios::out | ios::app);
+        // map_data_file << "--------------------------------------------\n";
+        // map_data_file << "Map: " << cmh / 2 << " " << cmw / 2 << "\n";
         for(int i = 0; i < cmh / 2; ++i){
             for(int j = 0; j < cmw / 2; ++j){
                 if(coverage_map.data[(2 * i) * cmw + (2 * j)] && coverage_map.data[(2 * i) * cmw + (2 * j + 1)] &&
@@ -627,9 +614,9 @@ public:
                 }else{
                     Map[i][j] = 0;
                 }
-                map_data_file << Map[i][j];
+                // map_data_file << Map[i][j];
             }
-            map_data_file << "\n";
+            // map_data_file << "\n";
         }
 
         for (int i = 0; i < Map.size(); ++i) {
@@ -641,7 +628,7 @@ public:
             }
         }
 
-        map_data_file.close();
+        // map_data_file.close();
     }
 };
 

@@ -65,7 +65,6 @@ public:
 	int dir[4][2] = { {1, 0}, {-1, 0}, {0, 1}, {0, -1} };
 	int dir2[4][2] = { {0, 1}, {0, -1}, {1, 0}, {-1, 0} };
 
-	// bigcols对应的是mapServer地图的x，切记切记
 	Division(Mat& map) : Map(map){
 		//smallrows = Map.size();  smallcols = Map[0].size();
 	}

@@ -190,29 +190,19 @@ vector<int> PathCut::A_star_path(int u, int v) {
 		if (cur.gx - dis[cur.id] > eps)	continue;
 
 		int cx = cur.id / bigcols, cy = cur.id % bigcols;
-		//cout << "current coor: " << cx << " " << cy << endl;
 		for (int i = 0; i < 4; ++i) {
 			int dx = cx + dir[i][0], dy = cy + dir[i][1];
 			if (dx < 0 || dx >= bigrows || dy < 0 || dy >= bigcols || !Region[dx][dy])	continue;
 
 			int nxt_id = dx * bigcols + dy;
 			if (dis[nxt_id] > dis[cur.id] + 1.0) {
-				//cout << "nxt id and nxt coor: " << nxt_id << " " << dx << " " << dy << endl;
 				pre[nxt_id] = cur.id;
 				dis[nxt_id] = dis[cur.id] + 1.0;
 				que.push({ dis[nxt_id] + euclidean_dis(dx, dy, ex, ey), dis[nxt_id], nxt_id });
 			}
 		}
-		//cout << "--------------\n";
 	}
 
-	//cout << dis[200] << " " << dis[201] << endl;
-	/*for (int i = 0; i < pre.size(); ++i) {
-		cout << "No. " << i << " 's point's previous point is " << pre[i] << endl;
-	}*/
-
-	//cout << "does it work???" << endl;
-	//cout << pre[v] << endl;
 	// from tail to head
 	vector<int> path;
 	int it = v;
@@ -330,20 +320,12 @@ double PathCut::updateCutVal(int i) {
 
 // depot是机器人在region下的一维label
 void PathCut::MSTC_Star() {
-	//cout << "depot's size and cuts' size: " << depot.size() << " " << cuts.size() << "\n";
 	// 注意每个机器人的路径初始长度不能简单地根据后减前获取，因为圆上下一个机器人不一定就是下一个序号的机器人
 	// 最好是这里在做一层映射，按照圆上的顺序编号，这个编号和robot_init_pos一一对应，最后再映射回去就可以了
 	// 最主要需要知道depot label -> circle label(cuts label)
 	vector<int> tmp;
 	for (auto x : depot) tmp.push_back(invSequence[x]);
 	sort(tmp.begin(), tmp.end());
-	
-	// printf
-	// cout << "Cut prework, show depot and cut: \n";
-	// for(int i = 0; i < depot.size(); ++i){
-	// 	cout << i << " depot and inv: " << depot[i] << " " << invSequence[depot[i]] << " cut: " << tmp[i] << "\n";
-	// }
-	// cout << "\n\n";
 
 	for (int i = 0; i < depot.size(); ++i) {
 		for (int j = 0; j < depot.size(); ++j) {
@@ -354,14 +336,6 @@ void PathCut::MSTC_Star() {
 		}
 	}
 
-	// printf
-	// cout << "Cut prework, transform cut depot label\n";
-	// for(int i = 0; i < depot.size(); ++i){
-	// 	cout << i << " depot_cut " << depot_cut[i] << " cut_depot: " << cut_depot[i] << " depot " << depot[cut_depot[i]] << "\n";
-	// }
-	// cout << "\n";
-
-	// TODO i改掉
 	double opt = 0, wst = 2e9;
 	for (int i = 0; i < depot.size(); ++i) {
 		cuts[i].start = invSequence[depot[cut_depot[i]]];
@@ -369,13 +343,11 @@ void PathCut::MSTC_Star() {
 		cuts[i].val = updateCutVal(i);
 		opt = std::max(opt, cuts[i].val);
 		wst = std::min(wst, cuts[i].val);
-
-		//cout << "No." << i << "'s cut's original start, len and val: " << cuts[i].start << " " << cuts[i].len << " " << cuts[i].val << endl;
 	}
 
-	// 注意，论文里面这里的跳出条件是最短路径权重大于等于最长路径
+	// 注意，MSTC*论文里面这里的跳出条件是最短路径权重大于等于最长路径，实际测试对于某些地图这个条件并不能结束循环，所以需要修改一下
 	int cur_iter = 0, max_iter = 10;
-	//while (cur_iter < max_iter) 
+	// while (cur_iter < max_iter) 
 	// infinite loop
 	while (opt - wst > 10.0) {
 		cout << "cutting for balancing...\n";     // just a sign
@@ -393,10 +365,6 @@ void PathCut::MSTC_Star() {
 		}
 
 		cout << "before adjustment opt and wst: " << maxx << "  " << minn << "\n";
-		/*cout << "min cut and max cut's id: " << min_cut << " " << max_cut << endl;
-		cout << "min cut and max cut's length: " << cuts[min_cut].len << " " << cuts[max_cut].len << endl;
-		cout << "min cut and max cut's val: " << cuts[min_cut].val << " " << cuts[max_cut].val << endl;*/
-
 		// 判断用逆时针还是顺时针那一段
 		vector<int> clw = getHalfCuts(min_cut, max_cut, 1);
 		vector<int> ccw = getHalfCuts(min_cut, max_cut, -1);
@@ -442,11 +410,6 @@ vector<int> PathCut::getHalfCuts(int cut_min, int cut_max, int dir) {
 
 // 只需要调整cut的起点、长度和权重，类里面的cut vec修改即可
 void PathCut::Balanced_Cut(vector<int>& adjustCuts) {
-	//cout << "----------------------------------------------\n";
-	//cout << "adjusting cut: ";
-	/*for (auto i : adjustCuts) cout << i << " ";
-	cout << endl;*/
-
 	int r_first = adjustCuts.front(), r_last = adjustCuts.back();
 	double old_val_max = -1, old_val_sum = 0;
 	for (auto& x : adjustCuts) {
@@ -458,36 +421,18 @@ void PathCut::Balanced_Cut(vector<int>& adjustCuts) {
 	int old_len_r_first = cuts[r_first].len, old_len_r_last = cuts[r_last].len;
 	double cur_val_max = -1, cur_val_sum = 0;
 	bool update_success = false;
+
 	//int lef = 0, rig = cuts[r_first].len + cuts[r_last].len - 1;  // -1是确保不会出现长度为0的情况
-	// MAY BE BUGS!  rig = 1.0 * (cuts[r_first].len + cuts[r_last].len - 1) + getTurnAndLength(r_first) + getTurnAndLength(r_last);
 	double lef = 0, rig = getTurnAndLength(r_first) + getTurnAndLength(r_last);
-	/*cout << "checking original length for every robot before adjustment...\n";
-	for (auto x : cuts) cout << x.len << " ";
-	cout << endl;*/
 
 	// 原本只用长度进行二分，但是如果考虑转弯，则是对路径长度+转弯权重进行二分，然后再更新长度
 	// 更新长度只能从头开始二分查找路径了
 	while (rig - lef > eps) {
-		//cout << "haha" << endl;
 		double mid = (lef + rig) / 2;
-
-		//cout << "lef and rig and mid: " << lef << " " << rig << " " << mid << endl;
-		// 修改len不能和之前一样了，得二分查找下标才行
-		// MAY BE BUGS! sth wrong with r_first 这个不是点的下标！！！
-		// 这里的二分有问题 毕竟是对一个前缀和数组进行二分
-		// mid + getTurnAndLength(r_first)
-		// 不能在这个前缀和上二分，因为他不是圆形的，也许要扩大到两倍长度
-		// firstCutLen大于两段之和是怎么一回事？
 		int firstCutLen = std::lower_bound(pathValue.begin() + cuts[r_first].start, pathValue.end(), mid + pathValue[cuts[r_first].start]) - pathValue.begin() - cuts[r_first].start + 1;
-		//cout << "firstCutLen: " << firstCutLen << endl;
 		cuts[r_first].len = firstCutLen;
 		cuts[r_last].len = old_len_r_first + old_len_r_last - firstCutLen;
 
-		//cout << "adjust len first and last: " << mid << " " << old_len_r_first + old_len_r_last - mid << endl;
-		//cout << "lef and rig: " << lef << " " << rig << endl;
-
-		// 首尾的长度更新后，要更新首部以后的段落起始点以及val
-		// 这里更新起点是有问题的
 		vector<int>::iterator it = adjustCuts.begin();
 		while(it != adjustCuts.end()) {
 			if(it != adjustCuts.begin())
@@ -505,22 +450,12 @@ void PathCut::Balanced_Cut(vector<int>& adjustCuts) {
 			old_val_max = cur_val_max;
 			old_val_sum = cur_val_sum;
 		}
-		
-		// checking each cut
-		/*for (int i = 0; i < cuts.size(); ++i) {
-			cout << "No. " << i << " cut's start, len and val: " << cuts[i].start << " " << cuts[i].len << " " << cuts[i].val << endl;
-		}*/
-
 
 		if (cuts[r_first].val < cuts[r_last].val)	lef = mid + 1;
 		else if (cuts[r_first].val > cuts[r_last].val)	rig = mid - 1;
 		else break;
 	}
 	
-	/*cout << "checking original length for every robot after adjustment...\n";
-	for (auto x : cuts) cout << x.len << " ";
-	cout << endl;*/
-
 	if (!update_success) {
 		//cout << "Did not find Optimal Cut.\n";
 	}
@@ -553,7 +488,6 @@ Mat PathCut::generatePath() {
 		path_for_each_robot[i] = p1;
 	}
 
-	// TODO : 检查起点和终点是否对应
 	Mat path_final(depot.size(), vector<int>{});
 	for (int i = 0; i < cuts.size(); ++i) {
 		path_final[cut_depot[i]] = path_for_each_robot[i];

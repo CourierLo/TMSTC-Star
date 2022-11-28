@@ -1,3 +1,5 @@
+/* Use for algorithm debugging, doesn't involve in ROS */
+
 #include "PathCut.h"
 #include "MaximumSubRectDivision.h"
 #include "ACO_STC.h"
@@ -30,40 +32,6 @@ void checkMST(Mat& mst) {
 		cout << endl;
 	}
 }
-
-//int main() {
-//	/*while (scanf_s("%d%d%d", &R, &C, &N) != EOF && (R || C || N)) {
-//		dinic.init(R + C + 5);
-//		int r, c;
-//		for (int i = 1; i <= N; i++) {
-//			scanf_s("%d%d", &r, &c);
-//			dinic.add_edge(r, c + R, 1);
-//		}
-//		for (int i = 1; i <= R; i++) dinic.add_edge(0, i, 1);
-//		for (int i = 1; i <= C; i++) dinic.add_edge(i + R, C + R + 1, 1);
-//		int ans = dinic.Maxflow(0, C + R + 1);
-//		printf("%d ", ans);
-//		dinic.get_cut(0);
-//		for (int i = 1; i <= R; i++) if (!dinic.iscut[i])  printf("r%d ", i);
-//		for (int i = 1; i <= C; i++) if (dinic.iscut[i + R]) printf("c%d ", i);
-//		printf("\n");
-//	}*/
-//	int n, m;
-//	string s[305];
-//	cin >> n >> m;
-//
-//	Mat Map(n, vector<int>(m, 0));
-//	for (int i = 0; i < n; ++i) {
-//		cin >> s[i];
-//		for (int j = 0; j < m; ++j) {
-//			if (s[i][j] == '#')	Map[i][j] = 1;
-//		}
-//	}
-//	dinic.dinic_solver(Map);
-//
-//	return 0;
-//}
-
 
 int main() {
 	srand(0);

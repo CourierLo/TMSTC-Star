@@ -4,8 +4,6 @@ vector<vector<HeuristicSolver::rect>> HeuristicSolver::HeuristicPartition::chess
 	set<int> lineX{ 0, (int)Map.size() }, lineY{ 0, (int)Map[0].size() };
 	for (int i = 0; i < Map.size(); ++i) {
 		for (int j = 0; j < Map[0].size(); ++j) {
-			// if (Map[i][j])	continue;   //筛掉非ob的点
-
 			// Make Flag
 			int flag = 0;
 			for (int k = 0; k < 4; ++k) {
@@ -281,15 +279,12 @@ void HeuristicSolver::HeuristicPartition::mergeRanks(Mat& graph){
 	}
 
 	for (int i = 0; i < edges.size(); ++i) {
-		// 求每条边带来的增量
+		// 求每条边带来的增量(savings)
 		// 度为零，增量为0；度为1，增量-2或0；度为2，增量0或2；度为3，增量2；度为4不可连接。 算边的两端的增量
 		edges[i].cost = getEdgeVal(graph, edges[i].from, edges[i].to);
 		que.push(edges[i]);
 	}
 
-	//sort(edge.begin(), edge.end());
-	// 当然可以提前结束
-	//int cnt = 0;
 	while (!que.empty()) {
 		edge curEdge = que.top();  que.pop();
 		int v1 = curEdge.from, v2 = curEdge.to;
@@ -303,12 +298,9 @@ void HeuristicSolver::HeuristicPartition::mergeRanks(Mat& graph){
 			continue;
 		}
 
-		// 可以继续优化，随着MST连接，某些边的cost会发生变化，可以多用一个heap维护之
 		graph[v1].push_back(v2);
 		graph[v2].push_back(v1);
 		uf.unite(v1, v2);
-
-		//cnt++;
 	}
 
 }

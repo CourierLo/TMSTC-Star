@@ -89,20 +89,15 @@ vector<rect> Division::maximumSubRectDivision(Mat& Map) {
 	for (int i = 0; i < Map.size(); ++i)
 		for (int j = 0; j < Map[0].size(); ++j)
 			numVertex += Map[i][j] ? 1 : 0;
-	//cout << numVertex << endl;
 
 	while (numVertex) {
 		vector<rect> tmp = findMaximumSubRect(Map);
-		//cout << "ret's number: " << tmp.size() << endl;
 		for (int i = 0; i < tmp.size(); ++i) {
 			numVertex -= tmp[i].height * tmp[i].width;
 
 			if (tmp[i].height > tmp[i].width)	tmp[i].dir = VERTICAL;
 			else if (tmp[i].height < tmp[i].width)	tmp[i].dir = HORIZONTAL;
 			else  tmp[i].dir = BOTH_ORI;
-
-			//cout << "(" << tmp[i].corner.first << ", " << tmp[i].corner.second << ")  h: " << tmp[i].height << " w: " << tmp[i].width << endl;
-			//cout << "numVertex left:" <<  numVertex << endl;
 
 			for (int row = tmp[i].corner.first; row < tmp[i].corner.first + tmp[i].height; ++row)
 			for (int col = tmp[i].corner.second; col < tmp[i].corner.second + tmp[i].width; ++col)
@@ -111,7 +106,6 @@ vector<rect> Division::maximumSubRectDivision(Mat& Map) {
 			ret.push_back(tmp[i]);
 		}
 	}
-	//cout << "end division!" << endl;
 
 	return ret;
 }
@@ -183,8 +177,6 @@ void Division::orientRect(vector<rect>& rectVec) {
 				else  horizontalCost++;
 			}
 
-			//cout << "No. " << i << " rect's "<< "orientation cost-> vertical: " << verticalCost << " horizontal: " << horizontalCost << endl;
-
 			// 定下来方向后，周围没有方向的也要保持一致
 			int newDir = verticalCost < horizontalCost ? VERTICAL : HORIZONTAL;
 			if (newDir != rectVec[i].dir) {
@@ -201,12 +193,6 @@ void Division::orientRect(vector<rect>& rectVec) {
 		if (!improvement)	break;
 	}
 }
-
-/*
-	另一种做法：
-	不构造MST了，只生成横的或者竖的边，然后每次用cost最小的边去连接这些条条就可以
-	由于在连接过程中边的cost值会发生变化，所以用个堆去维护边集，直到生成一个最大MST，算法结束
-*/
 
 // 贪心构造每个矩形对应的最优MST，并且构造对应的并查集
 void Division::constructMST(vector<rect>& rectVec) {
@@ -268,9 +254,6 @@ void Division::mergeMST(Mat& graph) {
 		que.push(edges[i]);
 	}
 
-	//sort(edge.begin(), edge.end());
-	// 当然可以提前结束
-	//int cnt = 0;
 	while (!que.empty()) {
 		edge curEdge = que.top();  que.pop();
 		int v1 = curEdge.from, v2 = curEdge.to;
@@ -284,12 +267,9 @@ void Division::mergeMST(Mat& graph) {
 			continue;
 		}
 
-		// 可以继续优化，随着MST连接，某些边的cost会发生变化，可以多用一个heap维护之
 		graph[v1].push_back(v2);
 		graph[v2].push_back(v1);
 		unite(v1, v2);
-
-		//cnt++;
 	}
 
 }
@@ -362,8 +342,6 @@ Mat Division::dfsWithStackSolver(unsigned char dfsDir) {
 		}
 	}
 
-	//cout << (int)dfsDir << endl;
-	//cout << stk.size() << endl;
 	for (int i = 3; i >= 0; --i) {
 		int dx = vertex.first + (dfsDir == VERTICAL ? dir[i][0] : dir2[i][0]);
 		int dy = vertex.second + (dfsDir == VERTICAL ? dir[i][1] : dir2[i][1]);
@@ -406,13 +384,6 @@ Mat Division::dfsWithStackSolver(unsigned char dfsDir) {
 	cout << "dfs' number of turns: " << totalTurns << endl;
 
 	checkMST(dfsGraph, Map);
-
-	/*for (int i = 0; i < dfsGraph.size(); ++i) {
-		if (dfsGraph[i].size() == 0)		continue;
-		cout << "No. " << i << ": ";
-		for (auto id : dfsGraph[i])	cout << id << " ";
-		cout << endl;
-	}*/
 
 	cout << "-----------------DFS MST Solver End---------------------" << endl;
 

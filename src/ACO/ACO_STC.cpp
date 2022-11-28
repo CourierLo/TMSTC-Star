@@ -219,7 +219,6 @@ void ACO_STC::get_result_info() {
 //			if (line[j] != '1' && line[j] != '0')	continue;
 //
 //			p = line[j] - '0';
-//			//注意地图标号 是否要取反 !!!!!!!!!! 自己造的random_n不需要取反而别人的bath/school要取反
 //			//p ^= 1;
 //			//if (p)	paint1(i, j);
 //			Map[i][len++] = p;

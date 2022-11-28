@@ -18,14 +18,6 @@ void MTSP::selection(){
 
     setRoulette();
 
-    // for(int i = 0; i < roulette.size(); ++i)
-    //     cout << vals[i] << " ";
-    // cout << "\n";
-
-    // for(int i = 0; i < roulette.size(); ++i)
-    //     cout << roulette[i] << " ";
-    // cout << "\n";
-
     for(int i = 4; i < ppl.size(); ++i){
         parents.push_back(ppl[wheelOut(_random())]);
     }
