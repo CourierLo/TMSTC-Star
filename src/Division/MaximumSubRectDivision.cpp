@@ -390,6 +390,70 @@ Mat Division::dfsWithStackSolver(unsigned char dfsDir) {
 	return dfsGraph;
 }
 
+Mat Division::bfsSolver(unsigned char bfsDir) {
+	clock_t start, finish;
+	start = clock();
+	Mat bfsGraph(Map.size() * Map[0].size(), vector<int>{});
+	std::vector<bool> vis(Map.size() * Map[0].size(), false);
+	std::queue<P> id_que;
+	
+	bool flag = false;
+	for (int i = 0; i < Map.size(); ++i) {
+		for (int j = 0; j < Map[0].size(); ++j) {
+			if (Map[i][j]) {
+				for(int k = 0; k < 4; ++k) {
+					int di = i + (bfsDir == VERTICAL ? dir[k][0] : dir2[k][0]);
+					int dj = j + (bfsDir == VERTICAL ? dir[k][1] : dir2[k][1]);
+					if(IS_VALID(di, dj)) {
+						id_que.push( { reshape(i, j), reshape(di, dj) } );
+					}
+				}
+
+				vis[reshape(i, j)] = true;
+				flag = true;
+				break;
+			}
+		}
+		if(flag)	break;
+	}
+
+	while(!id_que.empty()) {
+		P p = id_que.front();  id_que.pop();
+		if(vis[p.second]){
+			continue;
+		}
+
+		vis[p.second] = true;
+		bfsGraph[p.first].push_back(p.second);
+		bfsGraph[p.second].push_back(p.first);
+		for(int i = 0; i < 4; ++i) {
+			int dx = p.second / Map[0].size() + (bfsDir == VERTICAL ? dir[i][0] : dir2[i][0]);
+			int dy = p.second % Map[0].size() + (bfsDir == VERTICAL ? dir[i][1] : dir2[i][1]);
+
+			if(IS_VALID(dx, dy)) {
+				id_que.push({p.second, reshape(dx, dy)});
+			}
+		}
+	}
+
+	finish = clock();
+	cout << "BFS solver used time: " << finish - start << endl;
+
+	int totalTurns = 0;
+	for (int i = 0; i < bfsGraph.size(); ++i) {
+		totalTurns += getVertexVal(bfsGraph, i);
+	}
+
+	cout << "BFS' number of turns: " << totalTurns << endl;
+
+	checkMST(bfsGraph, Map);
+
+	cout << "------------------BFS Solver End--------------------" << endl;
+
+
+	return bfsGraph;
+}
+
 Mat Division::kruskalSolver() {
 	clock_t start, finish;
 	start = clock();

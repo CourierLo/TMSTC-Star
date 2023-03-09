@@ -315,7 +315,7 @@ HeuristicSolver::Mat HeuristicSolver::HeuristicPartition::hpSolver(bool merge){
 		for (int i = 0; i < ranks.size(); ++i) {
 			totalTurns += getVertexVal(ranks, i);
 		}
-		cout << "rect dinic MST number of turns: " << totalTurns << endl;
+		cout << "heuristic MST number of turns: " << totalTurns << endl;
 
 		checkMST(ranks, Map);
 	}

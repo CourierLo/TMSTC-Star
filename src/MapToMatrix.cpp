@@ -238,6 +238,8 @@ public:
                 if(MST_shape == "RECT_DIV")             MST = mstc_div.rectDivisionSolver();
                 else if(MST_shape == "DFS_VERTICAL")    MST = mstc_div.dfsWithStackSolver(VERTICAL);
                 else if(MST_shape == "DFS_HORIZONTAL")  MST = mstc_div.dfsWithStackSolver(HORIZONTAL);
+                else if(MST_shape == "BFS_VERTICAL")    MST = mstc_div.bfsSolver(VERTICAL);
+                else if(MST_shape == "BFS_HORIZONTAL")  MST = mstc_div.bfsSolver(HORIZONTAL);
                 else if(MST_shape == "KRUSKAL")         MST = mstc_div.kruskalSolver();
                 else if(MST_shape == "ACO_OPT"){
                     ACO_STC aco(1, 1, 1, 0.15, 60, 300, Map, MST);
