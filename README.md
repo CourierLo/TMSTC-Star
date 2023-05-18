@@ -35,7 +35,7 @@ Make sure your gazebo has all models especially when you are using ROS kinetic, 
 
 `/allocate_method`: "DARP" or "MSTC"
 
-`/MST_shape`: "DFS_HORIZONTAL", "DFS_VERTICAL", "KRUSKAL", "ACO", "HEURISTIC" or "DINIC"
+`/MST_shape`: "DFS_HORIZONTAL", "DFS_VERTICAL", "KRUSKAL", "ACO", "HEURISTIC", "RECT_DIV" or "DINIC"
 
 `/coverAndReturn`: let robots return to its depot or not, "true" or "false"
 
