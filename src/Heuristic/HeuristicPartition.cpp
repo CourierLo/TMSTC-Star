@@ -88,10 +88,12 @@ vector<vector<HeuristicSolver::rect>> HeuristicSolver::HeuristicPartition::orien
 	for (int iter = 0; iter < max_iter; ++iter) {
 		// randomize rec's orientation
 		unvisRec = {};
+		std::random_device rd;
+    	std::mt19937 generator(rd());
 		for (int i = 0; i < rec.size(); ++i) {
 			for (int j = 0; j < rec[0].size(); ++j) {
 				if (!rec[i][j].empty) {
-					rec[i][j].dir = generator() % 2;
+					rec[i][j].dir = rand() % 2;
 					unvisRec.push_back( { i, j });
 				}
 			}
@@ -99,10 +101,10 @@ vector<vector<HeuristicSolver::rect>> HeuristicSolver::HeuristicPartition::orien
 
 		//randomly and locally minimize ranks
 		while (1) {
-			bool bias = generator() % 2;
+			bool bias = rand() % 2;
 			bool improvement = false;
-			while (unvisRec.size()) {
-				int id = generator() % unvisRec.size();
+			while (!unvisRec.empty()) {
+				int id = rand() % unvisRec.size();
 				int x = unvisRec[id].first, y = unvisRec[id].second;
 				unvisRec.erase(unvisRec.begin() + id);
 				vis[x][y] = true;
@@ -130,38 +132,38 @@ vector<vector<HeuristicSolver::rect>> HeuristicSolver::HeuristicPartition::orien
 				// 分类讨论两种情况
 				if (hRank == vRank && bias != rec[x][y].dir) {
 					rec[x][y].dir ^= 1;
-					if (x > 0 && vis[x - 1][y]) {
+					if (x > 0 && vis[x - 1][y] && !rec[x - 1][y].empty) {
 						vis[x - 1][y] = false;
 						unvisRec.push_back({ x - 1, y });
 					}
-					if (x < rec.size() - 1 && vis[x + 1][y]) {
+					if (x < rec.size() - 1 && vis[x + 1][y]  && !rec[x + 1][y].empty) {
 						vis[x + 1][y] = false;
 						unvisRec.push_back({ x + 1, y });
 					}
-					if (y > 0 && vis[x][y - 1]) {
+					if (y > 0 && vis[x][y - 1] && !rec[x][y - 1].empty) {
 						vis[x][y - 1] = false;
 						unvisRec.push_back({ x, y - 1 });
 					}
-					if (y < rec[0].size() - 1 && vis[x][y + 1]) {
+					if (y < rec[0].size() - 1 && vis[x][y + 1] && !rec[x][y + 1].empty) {
 						vis[x][y + 1] = false;
 						unvisRec.push_back({ x, y + 1 });
 					}
 				}
 				else if ((hRank < vRank && rec[x][y].dir == VERTICAL) || (vRank < hRank && rec[x][y].dir == HORIZONTAL)) {
 					rec[x][y].dir ^= 1;
-					if (x > 0 && vis[x - 1][y]) {
+					if (x > 0 && vis[x - 1][y] && !rec[x - 1][y].empty) {
 						vis[x - 1][y] = false;
 						unvisRec.push_back({ x - 1, y });
 					}
-					if (x < rec.size() - 1 && vis[x + 1][y]) {
+					if (x < rec.size() - 1 && vis[x + 1][y] && !rec[x + 1][y].empty) {
 						vis[x + 1][y] = false;
 						unvisRec.push_back({ x + 1, y });
 					}
-					if (y > 0 && vis[x][y - 1]) {
+					if (y > 0 && vis[x][y - 1] && !rec[x][y - 1].empty) {
 						vis[x][y - 1] = false;
 						unvisRec.push_back({ x, y - 1 });
 					}
-					if (y < rec[0].size() - 1 && vis[x][y + 1]) {
+					if (y < rec[0].size() - 1 && vis[x][y + 1] && !rec[x][y + 1].empty) {
 						vis[x][y + 1] = false;
 						unvisRec.push_back({ x, y + 1 });
 					}
@@ -183,11 +185,13 @@ vector<vector<HeuristicSolver::rect>> HeuristicSolver::HeuristicPartition::orien
 				
 				if (rec[i][j].dir == HORIZONTAL) {
 					curRanks += height[i];
-					for (int k = j; k < rec[0].size() && rec[i][k].dir == HORIZONTAL; ++k)	vis[i][k] = true;
+					for (int k = j; k < rec[0].size() && rec[i][k].dir == HORIZONTAL && !rec[i][k].empty; ++k){
+						vis[i][k] = true;
+					}
 				}
 				else {
 					curRanks += width[j];
-					for (int k = i; k < rec.size() && rec[k][j].dir == VERTICAL; ++k)	vis[k][j] = true;
+					for (int k = i; k < rec.size() && rec[k][j].dir == VERTICAL && !rec[i][k].empty; ++k)	vis[k][j] = true;
 				}
 			}
 		}
@@ -196,9 +200,9 @@ vector<vector<HeuristicSolver::rect>> HeuristicSolver::HeuristicPartition::orien
 			minRanksRec = rec;
 		}
 
-#ifdef DEBUG
-		if(iter % 100 == 0)	cout << "No. " << iter << "iter's totalranks: " << totalRanks << "\n";
-#endif
+// #ifdef DEBUG
+		if(iter % 1000 == 0)	cout << "No. " << iter << "iter's totalranks: " << totalRanks << "\n";
+// #endif
 
 	} // end for iter
 
