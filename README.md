@@ -45,7 +45,7 @@ Make sure your gazebo has all models especially when you are using ROS kinetic, 
 
 `/coverage_action`: if you don't want robots cover at all so as to see the planning paths, set "false"
     
-If sets "MSTC" and "DINIC" at the same time, the planner will perform TMSCT*. Change main.launch to add more robots. If you want to use another map, remember to modify image path in `map/map.yaml` as well.
+If sets "MSTC" and "DINIC" at the same time, the planner will perform TMSTC*. Change main.launch to add more robots. If you want to use another map, remember to modify image path in `map/map.yaml` as well.
 ## 5. Demos
 mCPP on various environments:
 
@@ -58,3 +58,6 @@ mCPP on various environments:
 <img src="map/results/random_20_10_new.png" width = "300" height = "300" alt="random_res" /> 
 <img src="map/results/Denver_2.png" width = "300" height = "300" alt="Denver_2_res" />     
 <img src="map/results/NewYork_0.png" width = "300" height = "300" alt="NewYork_0_res" />
+
+## P.S
+This code was initially designed to verify some ideas and was not carefully structured. I will refactor the code with some useful tools such as *clang*, *gtest* and *asan* when I have time.
