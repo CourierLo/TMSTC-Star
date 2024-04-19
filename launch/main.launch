@@ -3,8 +3,7 @@
 
   <!-- start world -->
   <!-- Indoor_10m_1.world -->
-  <node name="gazebo" pkg="gazebo_ros" type="gazebo"
-   args="$(find MSTC_Star_update)/world/empty.world" respawn="false" output="screen" />
+  <include file="$(find gazebo_ros)/launch/empty_world.launch" />
 
   <node name="map_server" pkg="map_server" type="map_server" args="$(find MSTC_Star_update)/map/map.yaml" >
     <param name="frame_id" value="map" />

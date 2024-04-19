@@ -48,9 +48,9 @@ class MTSP{
     std::random_device rd;
     std::mt19937 generator;
 
-    struct mid_pt{
-        int id;
-        int pass_id1, pass_id2;  // 两个端点的id
+    typedef struct mid_pt{
+        unsigned long long id;
+        unsigned long long pass_id1, pass_id2;  // 两个端点的id
     };
     vector<mid_pt> mid_pts;
 
@@ -86,8 +86,8 @@ public:
 
             // have mid pts
             if(dinic.bricks[i].pts.size() > 1){
-                mid_pts.push_back((struct mid_pt){ pts.size(), pts.size() - 4, pts.size() - 3 });
-                mid_pts.push_back((struct mid_pt){ pts.size() + 1, pts.size() - 2, pts.size() - 1 });
+                mid_pts.push_back(mid_pt{pts.size(), pts.size() - 4, pts.size() - 3 });
+                mid_pts.push_back(mid_pt{pts.size() + 1, pts.size() - 2, pts.size() - 1 });
                 pts.push_back(dinic.bricks[i].mid_pts[0]);
                 pts.push_back(dinic.bricks[i].mid_pts[1]);
                 

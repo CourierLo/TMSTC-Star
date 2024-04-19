@@ -25,11 +25,11 @@ using std::string;
 typedef vector<vector<int>> Mat;
 typedef pair<int, int> P;
 typedef struct Rectangle {
-	P corner;		// ×óÉÏ½Ç
+	P corner;		// ï¿½ï¿½ï¿½Ï½ï¿½
 	int height;
 	int width;
 	unsigned char dir;
-	// ´Ó´óµ½Ð¡ÅÅÐò
+	// ï¿½Ó´ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½
 	bool operator <(const Rectangle& x)const {
 		return height * width > x.height * x.width;
 	}
@@ -83,6 +83,8 @@ public:
 
 	Mat rectDivisionSolver();
 
+	Mat bfsSolver(unsigned char bfsDir);
+
 	Mat dfsWithStackSolver(unsigned char dfsDir);
 
 	Mat kruskalSolver();
@@ -103,7 +105,7 @@ public:
 	void unite(int x, int y) {
 		x = find(x);  y = find(y);
 		if (x == y)	return;
-		fa[x] = y;		// ²»ÓÃrank×÷Æ½ºâÁË
+		fa[x] = y;		// ï¿½ï¿½ï¿½ï¿½rankï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½
 	}
 
 	bool isSameLine(int a, int b, int c) {
